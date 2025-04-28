@@ -1,12 +1,13 @@
-import tkinter as tk
-import chess
-import time
-import threading
-import random
 import os
+import random
+import threading
+import time
+import tkinter as tk
+
+import chess
 import torch
-import torch.nn as nn
-import torch.optim as optim
+
+from rlAgent import RLAgent
 
 #############################################
 # State and Action Encoding Functions
@@ -18,6 +19,7 @@ piece_to_index = {
     'P': 1, 'N': 2, 'B': 3, 'R': 4, 'Q': 5, 'K': 6,
     'p': 7, 'n': 8, 'b': 9, 'r': 10, 'q': 11, 'k': 12
 }
+
 
 def encode_board(board):
     """
@@ -36,6 +38,7 @@ def encode_board(board):
             encoding[square, 0] = 1.0
     return encoding.flatten()
 
+
 def encode_move(move):
     """
     Encode a move as the concatenation of two one-hot vectors for the source and target squares.
@@ -46,95 +49,6 @@ def encode_move(move):
     move_encoding[64 + move.to_square] = 1.0
     return move_encoding
 
-#############################################
-# Policy Network (Transformer Agent)
-#############################################
-
-class PolicyNetwork(nn.Module):
-    def __init__(self, input_dim=960, hidden_dim=256):
-        super(PolicyNetwork, self).__init__()
-        self.fc1 = nn.Linear(input_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, 1)  # scalar output score
-
-    def forward(self, state_move):
-        x = torch.relu(self.fc1(state_move))
-        score = self.fc2(x)
-        return score
-
-#############################################
-# RL Agent Definition (Combined Loss per Episode)
-#############################################
-
-class RLAgent:
-    def __init__(self, lr=1e-3):
-        self.policy_net = PolicyNetwork()
-        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=lr)
-        # These lists store the log probabilities for moves during the episode.
-        self.episode_log_probs = []
-        # A variable to accumulate loss (from immediate rewards) over the episode.
-        self.cumulative_loss = 0.0
-
-    def choose_move(self, board):
-        """
-        Compute scores for each legal move (using board+move encodings),
-        sample from the softmax distribution, and save the log probability.
-        The log probability is stored for use in the episode-level bonus loss.
-        Returns the chosen move.
-        """
-        state_vec = encode_board(board)  # shape: (832,)
-        legal_moves = list(board.legal_moves)
-        scores = []
-        for move in legal_moves:
-            move_vec = encode_move(move)  # shape: (128,)
-            input_tensor = torch.cat([state_vec, move_vec])  # shape: (960,)
-            score = self.policy_net(input_tensor)
-            scores.append(score)
-        scores_tensor = torch.stack(scores).view(-1)  # ensure one-dimensional tensor, shape: (n_moves,)
-        probs = torch.softmax(scores_tensor, dim=0)
-        m = torch.distributions.Categorical(probs)
-        index = m.sample()
-        log_prob = m.log_prob(index)
-        self.episode_log_probs.append(log_prob)
-        chosen_move = legal_moves[index.item()]
-        return chosen_move
-
-    def accumulate_immediate_loss(self, immediate_reward):
-        """
-        Accumulate the immediate loss for the most recent move.
-        immediate_loss = - log_prob * immediate_reward.
-        Instead of updating immediately, add this to cumulative_loss.
-        """
-        if self.episode_log_probs:
-            log_prob = self.episode_log_probs[-1]
-            self.cumulative_loss += -log_prob * immediate_reward
-
-    def finalize_episode(self, final_reward, weight=10):
-        """
-        At the end of the episode, compute the bonus loss using all stored log probabilities and the final reward,
-        add it to cumulative_loss, and then perform one backward update.
-        """
-        if self.episode_log_probs:
-            ep_loss = 0
-            for log_prob in self.episode_log_probs:
-                ep_loss += -log_prob * final_reward * weight
-            self.cumulative_loss += ep_loss
-        self.optimizer.zero_grad()
-        self.cumulative_loss.backward()
-        self.optimizer.step()
-        # Reset for the next episode.
-        self.episode_log_probs = []
-        self.cumulative_loss = 0.0
-
-    def save_checkpoint(self, filename="policy_checkpoint.pth"):
-        torch.save(self.policy_net.state_dict(), filename)
-        print("Checkpoint saved.")
-
-    def load_checkpoint(self, filename="policy_checkpoint.pth"):
-        try:
-            self.policy_net.load_state_dict(torch.load(filename))
-            print("Checkpoint loaded.")
-        except Exception as e:
-            print("Could not load checkpoint:", e)
 
 #############################################
 # Classical Agent (Minimax with Alpha-Beta)
@@ -149,6 +63,7 @@ piece_values = {
     chess.KING: 0
 }
 
+
 def evaluate_material(board):
     """A simple material evaluation function."""
     score = 0
@@ -158,6 +73,7 @@ def evaluate_material(board):
             value = piece_values[piece.piece_type]
             score += value if piece.color else -value
     return score
+
 
 def minimax(board, depth, alpha, beta, maximizing):
     if depth == 0 or board.is_game_over():
@@ -185,6 +101,7 @@ def minimax(board, depth, alpha, beta, maximizing):
                 break
         return min_eval
 
+
 def classical_agent_move(board, depth=3):
     legal_moves = list(board.legal_moves)
     best_moves = []
@@ -203,6 +120,7 @@ def classical_agent_move(board, depth=3):
     chosen_move = random.choice(best_moves)
     return chosen_move
 
+
 #############################################
 # GUI Application with Continual RL & Long-Term Rewards
 #############################################
@@ -215,6 +133,7 @@ piece_unicode = {
 
 # Instantiate the RL agent (Transformer for White).
 rl_agent = RLAgent()
+
 
 class ChessApp(tk.Tk):
     def __init__(self):
@@ -248,7 +167,7 @@ class ChessApp(tk.Tk):
                 if piece:
                     symbol = piece_unicode[piece.symbol()]
                     self.canvas.create_text((x1 + x2) / 2, (y1 + y2) / 2,
-                                             text=symbol, font=("Arial", 36))
+                                            text=symbol, font=("Arial", 36))
         if self.last_move:
             for sq in [self.last_move.from_square, self.last_move.to_square]:
                 file = chess.square_file(sq)
@@ -325,6 +244,7 @@ class ChessApp(tk.Tk):
                 print("Completed 100 games in fast mode; switching to UI mode with delays.")
                 self.fast_mode = False
                 self.deiconify()
+
 
 if __name__ == "__main__":
     checkpoint_file = "policy_checkpoint.pth"
