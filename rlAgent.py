@@ -10,8 +10,8 @@ from main import encode_board, encode_move
 #############################################
 
 class RLAgent:
-    def __init__(self, lr=1e-3):
-        self.policy_net = policyNetwork.LinearNetwork()
+    def __init__(self, policy, lr=1e-3):
+        self.policy_net = policy
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=lr)
         # These lists store the log probabilities for moves during the episode.
         self.episode_log_probs = []
