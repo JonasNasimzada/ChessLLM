@@ -6,9 +6,10 @@ import tkinter as tk
 
 import chess
 import torch
+import torch.optim as optim
 
 from policyNetwork import LinearNetwork
-from rlAgent import RLAgent
+from rlAgent import SimpleAgent
 
 
 #############################################
@@ -246,7 +247,7 @@ if __name__ == "__main__":
     }
 
     # Instantiate the RL agent (Transformer for White).
-    rl_agent = RLAgent(LinearNetwork())
+    rl_agent = SimpleAgent(LinearNetwork(), optim.Adam)
     checkpoint_file = "policy_checkpoint.pth"
     if os.path.exists(checkpoint_file):
         rl_agent.load_checkpoint(checkpoint_file)

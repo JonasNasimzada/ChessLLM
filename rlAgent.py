@@ -10,9 +10,9 @@ from main import encode_board, encode_move
 #############################################
 
 class RLAgent:
-    def __init__(self, policy, lr=1e-3):
+    def __init__(self, policy, optimizer, lr=1e-3):
         self.policy_net = policy
-        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=lr)
+        self.optimizer = optimizer(self.policy_net.parameters(), lr=lr)
         # These lists store the log probabilities for moves during the episode.
         self.episode_log_probs = []
         # A variable to accumulate loss (from immediate rewards) over the episode.
@@ -42,6 +42,22 @@ class RLAgent:
         chosen_move = legal_moves[index.item()]
         return chosen_move
 
+    def save_checkpoint(self, filename="policy_checkpoint.pth"):
+        torch.save(self.policy_net.state_dict(), filename)
+        print("Checkpoint saved.")
+
+    def load_checkpoint(self, filename="policy_checkpoint.pth"):
+        try:
+            self.policy_net.load_state_dict(torch.load(filename))
+            print("Checkpoint loaded.")
+        except Exception as e:
+            print("Could not load checkpoint:", e)
+
+
+class SimpleAgent(RLAgent):
+    def __init__(self, policy, optimizer):
+        super().__init__(policy, optimizer)
+
     def accumulate_immediate_loss(self, immediate_reward):
         """
         Accumulate the immediate loss for the most recent move.
@@ -68,14 +84,3 @@ class RLAgent:
         # Reset for the next episode.
         self.episode_log_probs = []
         self.cumulative_loss = 0.0
-
-    def save_checkpoint(self, filename="policy_checkpoint.pth"):
-        torch.save(self.policy_net.state_dict(), filename)
-        print("Checkpoint saved.")
-
-    def load_checkpoint(self, filename="policy_checkpoint.pth"):
-        try:
-            self.policy_net.load_state_dict(torch.load(filename))
-            print("Checkpoint loaded.")
-        except Exception as e:
-            print("Could not load checkpoint:", e)
