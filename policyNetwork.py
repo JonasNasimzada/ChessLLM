@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -16,3 +17,17 @@ class LinearNetwork(nn.Module):
         x = torch.relu(self.fc1(state_move))
         score = self.fc2(x)
         return score
+
+
+class SimpleTransformer(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.encoder_layer = nn.TransformerEncoderLayer(d_model=960, nhead=8)
+        self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=6)
+        self.fc = nn.Linear(960, 1)
+
+    def forward(self, state_move):
+        x = self.transformer_encoder(state_move)
+        # score = np.argmax(x)
+        x = self.fc(x)
+        return x

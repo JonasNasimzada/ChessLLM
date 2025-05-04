@@ -8,8 +8,28 @@ import chess
 import torch
 import torch.optim as optim
 
-from policyNetwork import LinearNetwork
-from rlAgent import SimpleAgent
+from policyNetwork import LinearNetwork, SimpleTransformer
+import rlAgent
+
+# Mapping for pieces:
+# Use index 0 for empty, then 1-6 for White pieces and 7-12 for Black pieces.
+piece_to_index = {
+    'P': 1, 'N': 2, 'B': 3, 'R': 4, 'Q': 5, 'K': 6,
+    'p': 7, 'n': 8, 'b': 9, 'r': 10, 'q': 11, 'k': 12
+}
+piece_values = {
+    chess.PAWN: 1,
+    chess.KNIGHT: 3,
+    chess.BISHOP: 3,
+    chess.ROOK: 5,
+    chess.QUEEN: 9,
+    chess.KING: 0
+}
+# Unicode pieces for drawing the board.
+piece_unicode = {
+    'P': '♙', 'N': '♘', 'B': '♗', 'R': '♖', 'Q': '♕', 'K': '♔',
+    'p': '♟', 'n': '♞', 'b': '♝', 'r': '♜', 'q': '♛', 'k': '♚'
+}
 
 
 #############################################
@@ -226,30 +246,11 @@ class ChessApp(tk.Tk):
 
 if __name__ == "__main__":
 
-    # Mapping for pieces:
-    # Use index 0 for empty, then 1-6 for White pieces and 7-12 for Black pieces.
-    piece_to_index = {
-        'P': 1, 'N': 2, 'B': 3, 'R': 4, 'Q': 5, 'K': 6,
-        'p': 7, 'n': 8, 'b': 9, 'r': 10, 'q': 11, 'k': 12
-    }
-    piece_values = {
-        chess.PAWN: 1,
-        chess.KNIGHT: 3,
-        chess.BISHOP: 3,
-        chess.ROOK: 5,
-        chess.QUEEN: 9,
-        chess.KING: 0
-    }
-    # Unicode pieces for drawing the board.
-    piece_unicode = {
-        'P': '♙', 'N': '♘', 'B': '♗', 'R': '♖', 'Q': '♕', 'K': '♔',
-        'p': '♟', 'n': '♞', 'b': '♝', 'r': '♜', 'q': '♛', 'k': '♚'
-    }
-
     # Instantiate the RL agent (Transformer for White).
-    rl_agent = SimpleAgent(LinearNetwork(), optim.Adam)
-    checkpoint_file = "policy_checkpoint.pth"
-    if os.path.exists(checkpoint_file):
-        rl_agent.load_checkpoint(checkpoint_file)
+    # rl_agent = rlAgent.SimpleAgent(LinearNetwork(), optim.Adam)
+    rl_agent = rlAgent.SimpleAgent(SimpleTransformer(), optim.Adam)
+    # checkpoint_file = "policy_checkpoint.pth"
+    # if os.path.exists(checkpoint_file):
+    #     rl_agent.load_checkpoint(checkpoint_file)
     app = ChessApp()
     app.mainloop()
