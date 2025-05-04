@@ -149,6 +149,7 @@ class ChessApp(tk.Tk):
         self.game_count = 0
         self.withdraw()  # Hide the window in fast mode.
         self.model_statistic = []
+        self.games_moves = []
         threading.Thread(target=self.game_loop, daemon=True).start()
 
     def draw_board(self):
@@ -188,9 +189,11 @@ class ChessApp(tk.Tk):
             # Clear accumulated losses for a new episode.
             rl_agent.episode_log_probs = []
             rl_agent.cumulative_loss = 0.0
+            amount_moves = 0
 
             # Play one complete game.
             while not self.board.is_game_over():
+                amount_moves += 1
                 if self.board.turn:  # Transformer (RL Agent) as White.
                     old_eval = evaluate_material(self.board)
                     move = rl_agent.choose_move(self.board)
@@ -215,6 +218,7 @@ class ChessApp(tk.Tk):
                     time.sleep(0.5)
             # End of game.
             result = self.board.result()  # "1-0", "0-1", or "1/2-1/2"
+            self.games_moves.append(amount_moves)
 
             print(f"Game {self.game_count} over: {result}")
             if result == "1-0":
