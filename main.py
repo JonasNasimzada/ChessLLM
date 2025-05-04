@@ -148,6 +148,7 @@ class ChessApp(tk.Tk):
         self.fast_mode = True  # For first 100 games: fast mode (no UI, no delays)
         self.game_count = 0
         self.withdraw()  # Hide the window in fast mode.
+        self.model_statistic = []
         threading.Thread(target=self.game_loop, daemon=True).start()
 
     def draw_board(self):
@@ -214,19 +215,25 @@ class ChessApp(tk.Tk):
                     time.sleep(0.5)
             # End of game.
             result = self.board.result()  # "1-0", "0-1", or "1/2-1/2"
+
             print(f"Game {self.game_count} over: {result}")
             if result == "1-0":
                 final_reward = 10
                 transformer_result = "won"
                 classical_result = "lost"
+                self.model_statistic.append(1)
+
             elif result == "0-1":
                 final_reward = -10
                 transformer_result = "lost"
                 classical_result = "won"
+                self.model_statistic.append(-1)
             else:
                 final_reward = -10
                 transformer_result = "drew (punished)"
                 classical_result = "drew (punished)"
+                self.model_statistic.append(0)
+
             # Finalize the episode with bonus update.
             rl_agent.finalize_episode(final_reward, weight=10)
             final_status = (f"Game {self.game_count} over: Transformer (White) {transformer_result}, "
@@ -245,7 +252,6 @@ class ChessApp(tk.Tk):
 
 
 if __name__ == "__main__":
-
     # Instantiate the RL agent (Transformer for White).
     # rl_agent = rlAgent.SimpleAgent(LinearNetwork(), optim.Adam)
     rl_agent = rlAgent.SimpleAgent(SimpleTransformer(), optim.Adam)
