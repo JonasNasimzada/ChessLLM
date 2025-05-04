@@ -31,6 +31,7 @@ class RLAgent:
         for move in legal_moves:
             move_vec = encode_move(move)  # shape: (128,)
             input_tensor = torch.cat([state_vec, move_vec])  # shape: (960,)
+            input_tensor = input_tensor.unsqueeze(0)
             score = self.policy_net(input_tensor)
             scores.append(score)
         scores_tensor = torch.stack(scores).view(-1)  # ensure one-dimensional tensor, shape: (n_moves,)
