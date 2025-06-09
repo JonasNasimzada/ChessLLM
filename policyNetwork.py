@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+from utils.encoding import encode_move
+
 
 #############################################
 # Policy Network (Transformer Agent)
@@ -29,3 +31,13 @@ class SimpleTransformer(nn.Module):
         x = self.transformer_encoder(state_move)
         x = self.fc(x)
         return x
+
+    def calculate_scores(self, state_vec, legal_moves):
+        scores = []
+        for move in legal_moves:
+            move_vec = encode_move(move)  # shape: (128,)
+            input_tensor = torch.cat([state_vec, move_vec])  # shape: (960,)
+            input_tensor = input_tensor.unsqueeze(0)
+            score = self.policy_net(input_tensor)
+            scores.append(score)
+        return scores

@@ -1,24 +1,15 @@
 #!/usr/bin/env python3
 """
-Script: pgn_to_fen_csv.py
-
 Reads a PGN file containing one or more games and writes a CSV where each row
 is one half-move (“ply”) with its corresponding FEN string.
-
-Requires: python-chess
-    pip install python-chess
 """
 
 import chess
 import chess.pgn
 import csv
 
-# ─── CONFIG ────────────────────────────────────────────────────────────────────
-INPUT_PGN_PATH = "LumbrasGigaBase 2024.pgn"  # Path to your input PGN file
-OUTPUT_CSV_PATH = "LumbrasGigaBase 2024.csv"  # Path for the output CSV
-
-
-# ───────────────────────────────────────────────────────────────────────────────
+INPUT_PGN_PATH = "../trainings_data/LumbrasGigaBase 2024.pgn"
+OUTPUT_CSV_PATH = "../trainings_data/LumbrasGigaBase 2024.csv"
 
 
 def extract_all_fens_from_pgn(pgn_path: str, csv_path: str) -> None:
