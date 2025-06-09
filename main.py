@@ -5,31 +5,11 @@ import tkinter as tk
 import chess
 import torch.optim as optim
 
-from utils.classicalAgent import classical_agent_move
-from policyNetwork import LinearNetwork, SimpleTransformer
 import rlAgent
+from policyNetwork import LinearNetwork, SimpleTransformer
+from utils.classicalAgent import classical_agent_move
 from utils.encoding import evaluate_material
 from utils.visualBoard import draw_board
-
-# Mapping for pieces:
-# Use index 0 for empty, then 1-6 for White pieces and 7-12 for Black pieces.
-piece_to_index = {
-    'P': 1, 'N': 2, 'B': 3, 'R': 4, 'Q': 5, 'K': 6,
-    'p': 7, 'n': 8, 'b': 9, 'r': 10, 'q': 11, 'k': 12
-}
-piece_values = {
-    chess.PAWN: 1,
-    chess.KNIGHT: 3,
-    chess.BISHOP: 3,
-    chess.ROOK: 5,
-    chess.QUEEN: 9,
-    chess.KING: 0
-}
-# Unicode pieces for drawing the board.
-piece_unicode = {
-    'P': '♙', 'N': '♘', 'B': '♗', 'R': '♖', 'Q': '♕', 'K': '♔',
-    'p': '♟', 'n': '♞', 'b': '♝', 'r': '♜', 'q': '♛', 'k': '♚'
-}
 
 
 #############################################

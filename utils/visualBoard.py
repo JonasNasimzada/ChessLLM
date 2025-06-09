@@ -1,6 +1,6 @@
 import chess
 
-from main import piece_unicode
+from utils.encoding import piece_unicode
 
 
 def draw_board(board: chess.Board,

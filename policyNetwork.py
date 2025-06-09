@@ -23,7 +23,7 @@ class LinearNetwork(nn.Module):
 class SimpleTransformer(nn.Module):
     def __init__(self):
         super().__init__()
-        self.encoder_layer = nn.TransformerEncoderLayer(d_model=960, nhead=8)
+        self.encoder_layer = nn.TransformerEncoderLayer(d_model=960, nhead=8, batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=6)
         self.fc = nn.Linear(960, 1)
 
@@ -38,6 +38,6 @@ class SimpleTransformer(nn.Module):
             move_vec = encode_move(move)  # shape: (128,)
             input_tensor = torch.cat([state_vec, move_vec])  # shape: (960,)
             input_tensor = input_tensor.unsqueeze(0)
-            score = self.policy_net(input_tensor)
+            score = self.forward(input_tensor)
             scores.append(score)
         return scores
