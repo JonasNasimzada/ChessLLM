@@ -1,4 +1,5 @@
 import torch
+import wandb
 
 from utils import encoding
 from utils.encoding import encode_board
@@ -52,6 +53,7 @@ class RLAgent:
         # Reset for the next episode.
         self.episode_log_probs = []
         self.cumulative_loss = 0.0
+        wandb.log({'cumulative_loss': self.cumulative_loss})
 
     def accumulate_immediate_loss(self, old_board, new_board):
         raise NotImplementedError("current RLAgent class did not implement accumulate_immediate_loss")
@@ -97,6 +99,7 @@ class PiecewiseAgent(RLAgent):
         lost_count = -abs(sum(encoding.piece_reward[piece] for piece in lost))
         captured_count = sum(encoding.piece_reward[piece] for piece in captured)
         self.immediate_reward = torch.tensor((lost_count + captured_count) * self.gamma, requires_grad=True)
+        wandb.log({'immediate_reward': self.immediate_reward})
         self.optimizer.zero_grad()
         self.immediate_reward.backward()
         self.optimizer.step()

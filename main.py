@@ -7,12 +7,10 @@ import chess
 import torch.optim as optim
 
 import rlAgent
-import utils
 from policyNetwork import LinearNetwork, SimpleTransformer
-from utils import encoding
 from utils.classicalAgent import classical_agent_move
-from utils.encoding import simple_evaluate_material, piece_unicode
 from utils.visualBoard import draw_board
+import wandb
 
 
 #############################################
@@ -104,8 +102,11 @@ class ChessApp(tk.Tk):
                 classical_result = "drew"
                 self.model_statistic.append(0)
 
+            run.log({"score": self.model_statistic[-1], "game_count": self.game_count,})
+
             # Finalize the episode with bonus update.
             rl_agent.finalize_episode(final_reward, weight=10)
+
             final_status = (f"Game {self.game_count} over: Transformer (White) {transformer_result}, "
                             f"Classical (Black) {classical_result} (Result: {result})")
             print(final_status)
@@ -119,12 +120,28 @@ class ChessApp(tk.Tk):
             #     print("Completed 100 games in fast mode; switching to UI mode with delays.")
             #     self.fast_mode = False
             #     self.deiconify()
-        print(f"The Agent won:{[x for x in self.model_statistic if x == 1]} "
-              f"draw: {[x for x in self.model_statistic if x == 0]} "
-              f"lost: {[x for x in self.model_statistic if x == -1]}")
+        amount_won = len([x for x in self.model_statistic if x == 1])
+        amount_draw = len([x for x in self.model_statistic if x == 0])
+        amount_lost = len([x for x in self.model_statistic if x == -1])
+        run.log({"amount_won": amount_won, "amount_draw": amount_draw, "amount_lost": amount_lost,
+                 "games_moves": self.games_moves})
 
 
 if __name__ == "__main__":
+    run = wandb.init(
+        # Set the wandb entity where your project will be logged (generally your team name).
+        entity="lab_course",
+        # Set the wandb project where this run will be logged.
+        project="ChessLLM",
+        # Track hyperparameters and run metadata.
+        config={
+            "learning_rate": 1e-3,
+            "architecture": "Transformer",
+            "dataset": "NONE",
+            "epochs": 100,
+            "Agent": "piecewise",
+        },
+    )
     # Instantiate the RL agent (Transformer for White).
     rl_agent = rlAgent.SimpleAgent(LinearNetwork(), optim.AdamW)
     rl_agent = rlAgent.SimpleAgent(SimpleTransformer(), optim.AdamW)
@@ -134,3 +151,4 @@ if __name__ == "__main__":
     #     rl_agent.load_checkpoint(checkpoint_file)
     app = ChessApp()
     app.mainloop()
+    run.finish()
