@@ -1,3 +1,4 @@
+import copy
 import threading
 import time
 import tkinter as tk
@@ -6,9 +7,11 @@ import chess
 import torch.optim as optim
 
 import rlAgent
+import utils
 from policyNetwork import LinearNetwork, SimpleTransformer
+from utils import encoding
 from utils.classicalAgent import classical_agent_move
-from utils.encoding import evaluate_material
+from utils.encoding import simple_evaluate_material, piece_unicode
 from utils.visualBoard import draw_board
 
 
@@ -34,7 +37,11 @@ class ChessApp(tk.Tk):
         self.withdraw()  # Hide the window in fast mode.
         self.model_statistic = []
         self.games_moves = []
+        self.transformer_name = "Transformer (White)"
+        self.classical_name = "Classical (Black)"
         threading.Thread(target=self.game_loop, daemon=True).start()
+        if not self.fast_mode:
+            self.deiconify()
 
     def game_loop(self):
         checkpoint_file = "policy_checkpoint.pth"
@@ -54,14 +61,16 @@ class ChessApp(tk.Tk):
             while not self.board.is_game_over():
                 amount_moves += 1
                 if self.board.turn:  # Transformer (RL Agent) as White.
-                    transformer_name = "Transformer (White)"
+                    old_board = copy.deepcopy(self.board)
                     move = rl_agent.choose_move(self.board)
                     self.last_move = move
                     self.board.push(move)
+                    new_board = self.board
+                    rl_agent.accumulate_immediate_loss(old_board, new_board)
 
                 else:  # Classical Agent as Black.
                     move = classical_agent_move(self.board, depth=3)
-                    classical_name = "Classical (Black)"
+
                     self.last_move = move
                     self.board.push(move)
 
@@ -69,8 +78,8 @@ class ChessApp(tk.Tk):
                     self.after(0, draw_board(board=self.board, canvas=self.canvas, square_size=self.square_size,
                                              last_move=self.last_move))
                     # Determine status text based on who moved.
-                    status_text = (f"{transformer_name} moved: {move.uci()}"
-                                   if self.board.turn else f"{classical_name} moved: {move.uci()}")
+                    status_text = (f"{self.transformer_name} moved: {move.uci()}"
+                                   if self.board.turn else f"{self.classical_name} moved: {move.uci()}")
                     self.after(0, lambda text=status_text: self.status_label.config(text=text))
                     time.sleep(0.5)
             # End of game.
@@ -119,6 +128,7 @@ if __name__ == "__main__":
     # Instantiate the RL agent (Transformer for White).
     rl_agent = rlAgent.SimpleAgent(LinearNetwork(), optim.AdamW)
     rl_agent = rlAgent.SimpleAgent(SimpleTransformer(), optim.AdamW)
+    rl_agent = rlAgent.PiecewiseAgent(SimpleTransformer(), optim.AdamW)
     # checkpoint_file = "policy_checkpoint.pth"
     # if os.path.exists(checkpoint_file):
     #     rl_agent.load_checkpoint(checkpoint_file)

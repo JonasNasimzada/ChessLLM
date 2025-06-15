@@ -21,6 +21,15 @@ piece_unicode = {
     'p': '♟', 'n': '♞', 'b': '♝', 'r': '♜', 'q': '♛', 'k': '♚'
 }
 
+piece_reward = {
+    chess.PAWN: 1,
+    chess.KNIGHT: 5,
+    chess.BISHOP: 5,
+    chess.ROOK: 5,
+    chess.QUEEN: 10,
+    chess.KING: 100
+}
+
 
 #############################################
 # State and Action Encoding Functions
@@ -55,12 +64,44 @@ def encode_move(move):
     return move_encoding
 
 
-def evaluate_material(board):
+def simple_evaluate_material(board):
     """A simple material evaluation function."""
     score = 0
+    score_new = 0
+    piece_list = count_pieces(board)
+    for color, piece_type in piece_list:
+        value = piece_values[piece_type]
+        score_new += (value if color else -abs(value)) * piece_list[color, piece_type]
+    return score
+
+
+def count_pieces(board):
+    """Count the pieces on the board and return a dictionary with counts."""
+    cnt = {}
     for square in chess.SQUARES:
         piece = board.piece_at(square)
         if piece:
-            value = piece_values[piece.piece_type]
-            score += value if piece.color else -value
-    return score
+            key = (piece.color, piece.piece_type)
+            cnt[key] = cnt.get(key, 0) + 1
+    return cnt
+
+
+def evaluate_board_difference_score(old_board, new_board):
+    """Calculate the difference in material between two boards."""
+    old_counts = count_pieces(old_board)
+    new_counts = count_pieces(new_board)
+
+    lost = []
+    captured = []
+
+    for piece_type in chess.PIECE_TYPES:
+        old_black = old_counts.get((chess.BLACK, piece_type), 0)
+        new_black = new_counts.get((chess.BLACK, piece_type), 0)
+        if new_black < old_black:
+            captured.extend([piece_type for _ in range(old_black - new_black)])
+
+        old_white = old_counts.get((chess.WHITE, piece_type), 0)
+        new_white = new_counts.get((chess.WHITE, piece_type), 0)
+        if new_white < old_white:
+            lost.extend([piece_type for _ in range(old_white - new_white)])
+    return lost, captured

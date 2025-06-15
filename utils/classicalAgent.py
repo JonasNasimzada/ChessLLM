@@ -1,6 +1,6 @@
 import random
 
-from utils.encoding import evaluate_material
+from utils.encoding import simple_evaluate_material
 
 
 #############################################
@@ -9,7 +9,7 @@ from utils.encoding import evaluate_material
 
 def minimax(board, depth, alpha, beta, maximizing):
     if depth == 0 or board.is_game_over():
-        return evaluate_material(board)
+        return simple_evaluate_material(board)
     if maximizing:
         max_eval = -float('inf')
         for move in board.legal_moves:
