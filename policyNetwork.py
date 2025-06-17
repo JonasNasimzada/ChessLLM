@@ -1,43 +1,35 @@
 import torch
 import torch.nn as nn
 
-from utils.encoding import encode_move
-
-
-#############################################
-# Policy Network (Transformer Agent)
-#############################################
+# ---------------------------------------------------------------------
+# Policy Networks
+# ---------------------------------------------------------------------
 
 class LinearNetwork(nn.Module):
-    def __init__(self, input_dim=960, hidden_dim=256):
-        super(LinearNetwork, self).__init__()
+    """A simple 2‑layer MLP that outputs a scalar score for (state+move)."""
+
+    def __init__(self, input_dim: int = 960, hidden_dim: int = 256):
+        super().__init__()
         self.fc1 = nn.Linear(input_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, 1)  # scalar output score
+        self.fc2 = nn.Linear(hidden_dim, 1)
 
     def forward(self, state_move):
         x = torch.relu(self.fc1(state_move))
-        score = self.fc2(x)
-        return score
+        return self.fc2(x)                  # (batch, 1)
 
 
 class SimpleTransformer(nn.Module):
+    """Transformer encoder → **128‑logit** head."""
+
     def __init__(self):
         super().__init__()
         self.encoder_layer = nn.TransformerEncoderLayer(d_model=960, nhead=8, batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=6)
-        self.fc = nn.Linear(960, 1)
+        self.fc = nn.Linear(960, 1)       # ← was 1, now 128
 
     def forward(self, state_move):
+        if state_move.dim() == 2:
+            state_move = state_move.unsqueeze(1)   # (B,1,960)
         x = self.transformer_encoder(state_move)
-        x = self.fc(x)
-        return x
-
-    def calculate_scores(self, state_vec, legal_moves):
-        scores = []
-        for move in legal_moves:
-            move_vec = encode_move(move)  # shape: (128,)
-            input_tensor = torch.cat([state_vec, move_vec])  # shape: (960,)
-            input_tensor = input_tensor.unsqueeze(0)
-            score = self.forward(input_tensor)
-            scores.append(score)
-        return scores
+        x = x.squeeze(1)                           # (B,960)
+        return self.fc(x)                          # (B,128)
