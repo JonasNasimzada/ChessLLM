@@ -3,10 +3,11 @@ import torch.nn as nn
 
 from utils.encoding import encode_move
 
-
 #############################################
 # Policy Network (Transformer Agent)
 #############################################
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 class LinearNetwork(nn.Module):
     def __init__(self, input_dim=960, hidden_dim=256):
@@ -20,12 +21,12 @@ class LinearNetwork(nn.Module):
         return score
 
 
-class SimpleTransformer(nn.Module):
+class SimpleTransformer(nn.Module):  # try pretrained transformer
     def __init__(self):
         super().__init__()
-        self.encoder_layer = nn.TransformerEncoderLayer(d_model=960, nhead=8, batch_first=True)
-        self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=6)
-        self.fc = nn.Linear(960, 1)
+        self.encoder_layer = nn.TransformerEncoderLayer(d_model=960, nhead=8, batch_first=True).to(device)
+        self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=6).to(device)
+        self.fc = nn.Linear(960, 1).to(device)
 
     def forward(self, state_move):
         x = self.transformer_encoder(state_move)
@@ -33,11 +34,14 @@ class SimpleTransformer(nn.Module):
         return x
 
     def calculate_scores(self, state_vec, legal_moves):
-        scores = []
+        state_vec = state_vec.to(device)  # shape: (832,) if your move-encoding is 128
+        # Build a batch of [state||move] vectors
+        move_tensors = []
         for move in legal_moves:
-            move_vec = encode_move(move)  # shape: (128,)
-            input_tensor = torch.cat([state_vec, move_vec])  # shape: (960,)
-            input_tensor = input_tensor.unsqueeze(0)
-            score = self.forward(input_tensor)
-            scores.append(score)
-        return scores
+            move_vec = encode_move(move).to(device)  # shape: (128,)
+            move_tensors.append(torch.cat([state_vec, move_vec], dim=-1))
+        # Stack into shape (N, 960) then add sequence dim → (N, 1, 960)
+        batch = torch.stack(move_tensors, dim=0).unsqueeze(1)
+        scores = self.forward(batch)  # → (N, 1, 1)
+        # Flatten and return as Python floats
+        return scores.view(-1)

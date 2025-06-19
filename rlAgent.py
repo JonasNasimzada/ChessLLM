@@ -28,8 +28,8 @@ class RLAgent:
         state_vec = encode_board(board)  # shape: (832,)
         legal_moves = list(board.legal_moves)
         scores = self.policy_net.calculate_scores(state_vec, legal_moves)
-        scores_tensor = torch.stack(scores).view(-1)  # ensure one-dimensional tensor, shape: (n_moves,)
-        probs = torch.softmax(scores_tensor, dim=0)
+        #scores_tensor = torch.stack(scores).view(-1)  # ensure one-dimensional tensor, shape: (n_moves,)
+        probs = torch.softmax(scores, dim=0)
         m = torch.distributions.Categorical(probs)
         index = m.sample()
         log_prob = m.log_prob(index)
@@ -50,10 +50,10 @@ class RLAgent:
         self.optimizer.zero_grad()
         self.cumulative_loss.backward()
         self.optimizer.step()
+        wandb.log({'cumulative_loss': self.cumulative_loss})
         # Reset for the next episode.
         self.episode_log_probs = []
         self.cumulative_loss = 0.0
-        wandb.log({'cumulative_loss': self.cumulative_loss})
 
     def accumulate_immediate_loss(self, old_board, new_board):
         raise NotImplementedError("current RLAgent class did not implement accumulate_immediate_loss")
@@ -98,8 +98,11 @@ class PiecewiseAgent(RLAgent):
         lost, captured = encoding.evaluate_board_difference_score(old_board, new_board)
         lost_count = -abs(sum(encoding.piece_reward[piece] for piece in lost))
         captured_count = sum(encoding.piece_reward[piece] for piece in captured)
-        self.immediate_reward = torch.tensor((lost_count + captured_count) * self.gamma, requires_grad=True)
+
+        self.immediate_reward = (lost_count + captured_count) * self.gamma
         wandb.log({'immediate_reward': self.immediate_reward})
+        self.immediate_reward = torch.tensor((lost_count + captured_count) * self.gamma, requires_grad=True)
+
         self.optimizer.zero_grad()
         self.immediate_reward.backward()
         self.optimizer.step()

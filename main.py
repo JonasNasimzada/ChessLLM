@@ -8,9 +8,11 @@ import torch.optim as optim
 
 import rlAgent
 from policyNetwork import LinearNetwork, SimpleTransformer
-from utils.classicalAgent import classical_agent_move
+from utils.classicalAgent import ClassicalAgent
+from utils.stockfish import StockfishAgent
 from utils.visualBoard import draw_board
 import wandb
+import torch
 
 
 #############################################
@@ -19,7 +21,7 @@ import wandb
 
 
 class ChessApp(tk.Tk):
-    def __init__(self):
+    def __init__(self, opponent=None):
         super().__init__()
         self.title("Transformer (RL) vs Classical Chess with Two-Phase Rewards")
         self.board = chess.Board()
@@ -40,6 +42,7 @@ class ChessApp(tk.Tk):
         threading.Thread(target=self.game_loop, daemon=True).start()
         if not self.fast_mode:
             self.deiconify()
+        self.opponent_agent = opponent_agent
 
     def game_loop(self):
         checkpoint_file = "policy_checkpoint.pth"
@@ -67,7 +70,7 @@ class ChessApp(tk.Tk):
                     rl_agent.accumulate_immediate_loss(old_board, new_board)
 
                 else:  # Classical Agent as Black.
-                    move = classical_agent_move(self.board, depth=3)
+                    move = self.opponent_agent.get_move(self.board)
 
                     self.last_move = move
                     self.board.push(move)
@@ -102,7 +105,7 @@ class ChessApp(tk.Tk):
                 classical_result = "drew"
                 self.model_statistic.append(0)
 
-            run.log({"score": self.model_statistic[-1], "game_count": self.game_count,})
+            run.log({"score": self.model_statistic[-1], "game_count": self.game_count, })
 
             # Finalize the episode with bonus update.
             rl_agent.finalize_episode(final_reward, weight=10)
@@ -142,13 +145,29 @@ if __name__ == "__main__":
             "Agent": "piecewise",
         },
     )
+    import torch
+
+    # Enable cuDNN autotuner to find the best algorithm for your hardware
+    torch.backends.cudnn.benchmark = True
+    # Select GPU if available
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    torch.backends.cudnn.benchmark = True
+    print(f"Using device: {device}")
+    # Instantiate the Transformer network and move it to GPU
+    network = SimpleTransformer().to(device)
     # Instantiate the RL agent (Transformer for White).
     rl_agent = rlAgent.SimpleAgent(LinearNetwork(), optim.AdamW)
-    rl_agent = rlAgent.SimpleAgent(SimpleTransformer(), optim.AdamW)
-    rl_agent = rlAgent.PiecewiseAgent(SimpleTransformer(), optim.AdamW)
+    rl_agent = rlAgent.SimpleAgent(network, optim.AdamW)
+    # rl_agent = rlAgent.PiecewiseAgent(network, optim.AdamW)
+
+    opponent_agent = ClassicalAgent(depth=3)  # Classical Agent for Black.
+    stockfish_path = "stockfish_path"  # Path to your Stockfish binary.
+    opponent_agent = StockfishAgent(stockfish_path=stockfish_path)  # Classical Agent for Black.
+
     # checkpoint_file = "policy_checkpoint.pth"
     # if os.path.exists(checkpoint_file):
     #     rl_agent.load_checkpoint(checkpoint_file)
-    app = ChessApp()
+
+    app = ChessApp(opponent=opponent_agent)
     app.mainloop()
     run.finish()
