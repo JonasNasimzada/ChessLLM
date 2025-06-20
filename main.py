@@ -4,14 +4,13 @@ import time
 import tkinter as tk
 
 import chess
+import torch
 import torch.optim as optim
 
-from policyNetwork import LinearNetwork, SimpleTransformer
+from encode_utils import encode_board, encode_move, piece_unicode, piece_values
+from llm_agent   import get_llm_board_eval
+from policyNetwork import SimpleTransformer
 import rlAgent
-
-from encode_utils import piece_to_index, piece_unicode, piece_values
-from encode_utils import decode_move, encode_board
-from llm_agent import get_llm_board_eval
 
 
 #############################################
@@ -135,49 +134,70 @@ class ChessApp(tk.Tk):
             print(f"Starting game {self.game_count}")
             self.status_label.config(text=f"Game {self.game_count} start")
             # Clear accumulated losses for a new episode.
-            rl_agent.episode_log_probs = []
-            rl_agent.cumulative_loss = 0.0
+            rl_agent.reset_episode_buffers()
+
             amount_moves = 0
 
             # Play one complete game.
             while not self.board.is_game_over():
                 amount_moves += 1
-                if self.board.turn:  # White's turn (RL + LLM integrated decision)
+                if self.board.turn:  # White to play
                     old_eval = evaluate_material(self.board)
 
-                    # RL Agent produces initial candidate move scores
-                    transformer_scores = rl_agent.policy_net(encode_board(self.board).unsqueeze(0)).squeeze()
+                    # -----------------------------------------------------------------
+                    # 1)  Build one (state + move) tensor for every legal move
+                    #     -> each tensor has 960 dims = 832 (board) + 128 (move)
+                    # -----------------------------------------------------------------
+                    legal_moves = list(self.board.legal_moves)
+                    state_vec = encode_board(self.board)  # (832,)
+                    scores = []
+                    for mv in legal_moves:
+                        mv_vec = encode_move(mv)  # (128,)
+                        inp = torch.cat([state_vec, mv_vec]).unsqueeze(0)  # (1,960)
+                        logits = rl_agent.policy_net(inp).squeeze()  # (128,)
+                        score = logits.mean()  # scalar value
+                        scores.append(score)
 
-                    # Select top-5 candidate moves from Transformer scores
-                    top_indices = transformer_scores.topk(5).indices
+                    scores_tensor = torch.stack(scores)  # shape (N,)
 
-                    # Evaluate the selected candidate moves using the LLM
+                    # -----------------------------------------------------------------
+                    # 2)  Pick the Transformer’s top-k moves
+                    # -----------------------------------------------------------------
+                    k = min(5, len(legal_moves))
+                    top_indices = scores_tensor.topk(k).indices.tolist()   # List[int]
+
+                    # -----------------------------------------------------------------
+                    # 3)  Ask the LLM to evaluate the positions after each candidate move
+                    # -----------------------------------------------------------------
                     llm_scores = []
-                    for idx in top_indices:
-                        move = decode_move(idx)
-                        self.board.push(move)
-                        fen_after_move = self.board.fen()
-                        llm_score = get_llm_board_eval(fen_after_move)  # Evaluate board state using LLM
-                        llm_scores.append(llm_score)
+                    for idx in top_indices:  # idx is now plain int
+                        mv = legal_moves[idx]
+                        self.board.push(mv)
+                        llm_scores.append(get_llm_board_eval(self.board.fen()))
                         self.board.pop()
 
-                    # Combine Transformer and LLM scores (simple summation or weighted sum)
-                    final_scores = transformer_scores.clone()
-                    for i, idx in enumerate(top_indices):
-                        final_scores[idx] += llm_scores[i]
+                    # -----------------------------------------------------------------
+                    # 4)  Fuse the scores (simple sum; can be weighted if desired)
+                    # -----------------------------------------------------------------
+                    final_scores = scores_tensor.clone()
+                    for offset, idx in enumerate(top_indices):
+                        final_scores[idx] += llm_scores[offset]
 
-                    # Select the best move based on combined scores
-                    best_move_idx = final_scores.argmax().item()
-                    move = decode_move(best_move_idx)
+                    # -----------------------------------------------------------------
+                    # 5)  Select and execute the move with the highest combined score
+                    # -----------------------------------------------------------------
+                    best_idx = final_scores.argmax().item()
+                    move = legal_moves[best_idx]
 
-                    # Execute the chosen move
                     self.board.push(move)
                     self.last_move = move
-                    new_eval = evaluate_material(self.board)
-                    immediate_reward = new_eval - old_eval
 
-                    # Update RL agent's immediate loss based on the immediate reward
-                    rl_agent.accumulate_immediate_loss(immediate_reward)
+                    # -----------------------------------------------------------------
+                    # 6)  Compute dense reward and pass it to the RL agent
+                    # -----------------------------------------------------------------
+                    new_eval = evaluate_material(self.board)
+                    rl_agent.accumulate_immediate_loss(new_eval - old_eval)
+
 
                 else:  # Classical Agent as Black.
                     move = classical_agent_move(self.board, depth=3)

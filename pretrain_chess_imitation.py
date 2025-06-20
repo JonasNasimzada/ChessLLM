@@ -53,10 +53,8 @@ class ChessDataset(Dataset):
         board_vec = encode_board(board)          # (832,)
         zeros_128 = torch.zeros(128)             # (128,)
         x = torch.cat([board_vec, zeros_128])    # (960,)
-
-        # Target vector: convert one-hot (128,) to scalar 1.0
-        y = encode_move(move_obj)  # (128,) one-hot
-        y = torch.tensor([y.max()])  # -> tensor([1.])
+        # Target index 0‥127  (class label for CrossEntropyLoss)
+        y = encode_move(move_obj).argmax()  # scalar tensor
         return x, y
 
 
@@ -142,7 +140,7 @@ if __name__ == "__main__":
 
     model     = SimpleTransformer().to(device)     # 960‑in, 1‑out
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-    loss_fn   = nn.BCEWithLogitsLoss()
+    loss_fn   = nn.CrossEntropyLoss()
 
     train_from_large_csv(
         csv_file=csv_file,
@@ -154,3 +152,5 @@ if __name__ == "__main__":
         chunksize=10_000,          # decrease if system RAM is limited
         epochs=1,
     )
+    # final save
+    torch.save(model.state_dict(), CHECKPOINT_DIR / "best.pt")

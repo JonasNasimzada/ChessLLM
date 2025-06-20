@@ -14,7 +14,7 @@ class RLAgent:
         # These lists store the log probabilities for moves during the episode.
         self.episode_log_probs = []
         # A variable to accumulate loss (from immediate rewards) over the episode.
-        self.cumulative_loss = 0.0
+        self.cumulative_loss = torch.tensor(0.0, requires_grad=True)
 
     def choose_move(self, board):
         """
@@ -65,7 +65,8 @@ class SimpleAgent(RLAgent):
         """
         if self.episode_log_probs:
             log_prob = self.episode_log_probs[-1]
-            self.cumulative_loss += -log_prob * immediate_reward
+            loss_add = -log_prob * immediate_reward  # tensor
+            self.cumulative_loss = self.cumulative_loss + loss_add
 
     def finalize_episode(self, final_reward, weight=10):
         """
@@ -80,6 +81,7 @@ class SimpleAgent(RLAgent):
         self.optimizer.zero_grad()
         self.cumulative_loss.backward()
         self.optimizer.step()
-        # Reset for the next episode.
-        self.episode_log_probs = []
-        self.cumulative_loss = 0.0
+
+    def reset_episode_buffers(self):
+            self.episode_log_probs = []
+            self.cumulative_loss = torch.tensor(0.0, requires_grad=True)
