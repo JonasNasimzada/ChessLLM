@@ -3,13 +3,11 @@
 Reads a PGN file containing one or more games and writes a CSV where each row
 is one half-move (“ply”) with its corresponding FEN string.
 """
+import os
 
 import chess
 import chess.pgn
 import csv
-
-INPUT_PGN_PATH = "../trainings_data/LumbrasGigaBase 2024.pgn"
-OUTPUT_CSV_PATH = "../trainings_data/LumbrasGigaBase 2024.csv"
 
 
 def extract_all_fens_from_pgn(pgn_path: str, csv_path: str) -> None:
@@ -37,8 +35,8 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str) -> None:
             for move in game.mainline_moves():
                 ply_index += 1
 
-                # Get the SAN for this move before pushing
-                san = board.san(move)
+                # Get the UCI for this move before pushing
+                uci = board.uci(move)
 
                 # Push the move onto the board
                 board.push(move)
@@ -47,10 +45,16 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str) -> None:
                 fen = board.fen()
 
                 # Write one line per half-move
-                writer.writerow([game_index, ply_index, san, fen])
+                writer.writerow([game_index, ply_index, uci, fen])
 
-    print(f"Done! Wrote every ply’s SAN and FEN to: {csv_path}")
+    print(f"Done! Wrote every ply’s UCI and FEN to: {csv_path}")
 
 
 if __name__ == "__main__":
-    extract_all_fens_from_pgn(INPUT_PGN_PATH, OUTPUT_CSV_PATH)
+    INPUT_PGN_PATH = "data"
+
+    for dirpath, dirname, files in os.walk(os.path.dirname(INPUT_PGN_PATH)):
+        for file in files:
+            if file.endswith(".pgn"):
+                extract_all_fens_from_pgn(os.path.join(dirpath, file), os.path.join(dirpath, file.replace(".pgn", ".csv")))
+
