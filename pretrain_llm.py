@@ -28,7 +28,7 @@ def instruction_format(sample):
 def create_dataset():
     dataset = load_dataset("./data/", split="train")
     ds = dataset.shuffle()
-    df = pd.DataFrame(ds['train'])
+    df = pd.DataFrame(ds)
     df = df.sort_values(["game_index", "ply_index"])
 
     def add_context(group):
