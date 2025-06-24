@@ -81,8 +81,7 @@ if __name__ == "__main__":
         quantization_config=bnb_config,
         low_cpu_mem_usage=True
     )
-    merged_model = model.merge_and_unload()
-    merged_model.save_pretrained("model_pretrained_chess_llm", safe_serialization=True)
+
 
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     tokenizer.padding_side = 'right'  # to prevent warnings
@@ -139,3 +138,8 @@ if __name__ == "__main__":
 
     # save model
     trainer.save_model()
+    # Merge LoRA weights into the base model and save the full merged model
+    from peft import PeftModel
+    # `trainer.model` is a PeftModel with LoRA adapters
+    full_model = trainer.model.merge_and_unload()
+    full_model.save_pretrained("pretrained_chess_llm_full")
