@@ -37,7 +37,7 @@ def create_dataset():
         for i in range(len(fens)):
             start = max(0, i - 27)
             # join the previous fens (i.e. positions before the current ply)
-            contexts.append(" ".join(fens[start:i]))
+            contexts.append(", ".join(fens[start:i]))
         group["context"] = contexts
         return group
 
