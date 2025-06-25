@@ -59,5 +59,5 @@ if __name__ == "__main__":
     #             extract_all_fens_from_pgn(os.path.join(dirpath, file),
     #                                       os.path.join(dirpath, file.replace(".pgn", ".csv")))
 
-    INPUT_PGN_FILE = "LumbrasGigaBase_OTB_2025.pgn"
+    INPUT_PGN_FILE = "../data_chess/LumbrasGigaBase_OTB_2025.pgn"
     extract_all_fens_from_pgn(INPUT_PGN_FILE, INPUT_PGN_FILE.replace(".pgn", ".csv"))
