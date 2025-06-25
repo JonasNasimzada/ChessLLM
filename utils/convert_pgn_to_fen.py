@@ -13,13 +13,13 @@ import csv
 def extract_all_fens_from_pgn(pgn_path: str, csv_path: str) -> None:
     """
     Reads every game in `pgn_path`. For each half-move, writes a row
-    [game_index, ply_index, move (SAN), fen_after_move] into `csv_path`.
+    [game_index, ply_index, move (UCI), fen_after_move] into `csv_path`.
     """
     with open(pgn_path, encoding="utf-8") as pgn_file, \
             open(csv_path, "w", newline="", encoding="utf-8") as out_csv:
 
         writer = csv.writer(out_csv)
-        # Header: Game # (1-based), Ply # (1-based), Move (SAN), FEN
+        # Header: Game # (1-based), Ply # (1-based), Move (UCI), FEN
         writer.writerow(["game_index", "ply_index", "move", "fen"])
 
         game_index = 0
@@ -51,10 +51,13 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str) -> None:
 
 
 if __name__ == "__main__":
-    INPUT_PGN_PATH = "data"
+    # INPUT_PGN_PATH = "./data"
+    #
+    # for dirpath, dirname, files in os.walk(os.path.dirname(INPUT_PGN_PATH)):
+    #     for file in files:
+    #         if file.endswith(".pgn"):
+    #             extract_all_fens_from_pgn(os.path.join(dirpath, file),
+    #                                       os.path.join(dirpath, file.replace(".pgn", ".csv")))
 
-    for dirpath, dirname, files in os.walk(os.path.dirname(INPUT_PGN_PATH)):
-        for file in files:
-            if file.endswith(".pgn"):
-                extract_all_fens_from_pgn(os.path.join(dirpath, file), os.path.join(dirpath, file.replace(".pgn", ".csv")))
-
+    INPUT_PGN_FILE = "LumbrasGigaBase_OTB_2025.pgn"
+    extract_all_fens_from_pgn(INPUT_PGN_FILE, INPUT_PGN_FILE.replace(".pgn", ".csv"))
