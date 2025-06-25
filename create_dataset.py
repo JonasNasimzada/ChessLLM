@@ -37,7 +37,35 @@ if __name__ == "__main__":
         return group
 
 
-    df = df.groupby("game_index", group_keys=False).apply(add_context)
+    #df = df.groupby("game_index", group_keys=False ).apply(add_context, )
+
+    df = df.sort_values(["game_index", "ply_index"], ignore_index=True)
+
+    # 2) one‐pass loop to build contexts
+    contexts = []
+    current_game = None
+    history = []  # will hold up to 27 last fens for the *current* game
+
+    for row in df.itertuples(index=False):
+        game, fen = row.game_index, row.fen
+
+        # new game? reset your history buffer
+        if game != current_game:
+            current_game = game
+            history.clear()
+
+        # build the context string
+        if history:
+            contexts.append(", ".join(history[-27:]))
+        else:
+            contexts.append("no moves before")
+
+        # append the current fen to history
+        history.append(fen)
+
+    # 3) assign back to your DataFrame
+    df["context"] = contexts
+
     print(df.head(3))
     ds = Dataset.from_pandas(df)
 
