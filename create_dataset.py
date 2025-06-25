@@ -1,12 +1,9 @@
 import pandas as pd
 from datasets import load_dataset, Dataset
 
-system_message = """You are the best chest engine that plays chess games. As an input u get the current chess 
-position postions of the past moves in FEN notation. You will generate the best chess move in UCI format. Here are 
-the FEN notation of the past moves: {moves}"""
+system_message = """You are the best chest engine that plays chess games. As an input u get the current chess position postions of the past moves in FEN notation. You will generate the best chess move in UCI format. Here are the FEN notation of the past moves: {moves}"""
 
-user_message = """Current chess position in FEN notation: {fen} - what is the next best move in UCI 
-format?"""
+user_message = """Current chess position in FEN notation: {fen} - what is the next best move in UCI format?"""
 
 
 def instruction_format(sample):
