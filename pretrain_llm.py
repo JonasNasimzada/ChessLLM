@@ -3,8 +3,7 @@ from datasets import load_dataset
 from huggingface_hub import login
 from peft import LoraConfig
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-from transformers import TrainingArguments
-from trl import setup_chat_format, SFTTrainer
+from trl import setup_chat_format, SFTTrainer, SFTConfig
 
 if __name__ == "__main__":
     login(
@@ -45,28 +44,32 @@ if __name__ == "__main__":
         task_type="CAUSAL_LM",
     )
 
-    args = TrainingArguments(
-        output_dir="pretrained_chess_llm",  # directory to save and repository id
-        num_train_epochs=3,  # number of training epochs
-        per_device_train_batch_size=3,  # batch size per device during training
-        gradient_accumulation_steps=2,  # number of steps before performing a backward/update pass
-        gradient_checkpointing=True,  # use gradient checkpointing to save memory
-        optim="adamw_torch_fused",  # use fused adamw optimizer
-        logging_steps=10,  # log every 10 steps
-        save_strategy="epoch",  # save checkpoint every epoch
-        learning_rate=2e-4,  # learning rate, based on QLoRA paper
-        bf16=True,  # use bfloat16 precision
-        tf32=True,  # use tf32 precision
-        max_grad_norm=0.3,  # max gradient norm based on QLoRA paper
-        warmup_ratio=0.03,  # warmup ratio based on QLoRA paper
-        lr_scheduler_type="constant",  # use constant learning rate scheduler
-        push_to_hub=True,  # push model to hub
-        report_to="wandb",  # report metrics to wandb
-    )
-
     max_seq_length = 2048  # max sequence length for model and packing of the dataset
 
     dataset = load_dataset("./data/")
+    args = SFTConfig(output_dir="pretrained_chess_llm",  # directory to save and repository id
+                     num_train_epochs=3,  # number of training epochs
+                     per_device_train_batch_size=3,  # batch size per device during training
+                     gradient_accumulation_steps=2,  # number of steps before performing a backward/update pass
+                     gradient_checkpointing=True,  # use gradient checkpointing to save memory
+                     optim="adamw_torch_fused",  # use fused adamw optimizer
+                     logging_steps=10,  # log every 10 steps
+                     save_strategy="epoch",  # save checkpoint every epoch
+                     learning_rate=2e-4,  # learning rate, based on QLoRA paper
+                     bf16=True,  # use bfloat16 precision
+                     tf32=True,  # use tf32 precision
+                     max_grad_norm=0.3,  # max gradient norm based on QLoRA paper
+                     warmup_ratio=0.03,  # warmup ratio based on QLoRA paper
+                     lr_scheduler_type="constant",  # use constant learning rate scheduler
+                     push_to_hub=True,  # push model to hub
+                     report_to="wandb",  # report metrics to wandb
+                     packing=True,
+                     max_seq_length=max_seq_length,
+                     dataset_kwargs={
+                         "add_special_tokens": False,  # We template with special tokens
+                         "append_concat_token": False,  # No need to add additional separator token
+                     },
+                     )
 
 
     def tokenize_function(examples):
@@ -80,11 +83,6 @@ if __name__ == "__main__":
         args=args,
         train_dataset=tokenized_datasets,
         peft_config=peft_config,
-        #max_seq_length=max_seq_length,
-        #tokenizer=tokenizer,
-        #packing=True,
-
-
     )
 
     trainer.train()
