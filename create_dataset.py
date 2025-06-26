@@ -71,6 +71,8 @@ if __name__ == "__main__":
 
     # Convert dataset to OAI messages
     dataset = ds.map(instruction_format, remove_columns=dataset.features, batched=True, batch_size=1000)
+
+    dataset = dataset.remove_columns(['context', '__index_level_0__'])
     # split dataset into 10,000 training samples and 2,500 test samples
     dataset = dataset.train_test_split(train_size=0.8, test_size=0.2)
 
