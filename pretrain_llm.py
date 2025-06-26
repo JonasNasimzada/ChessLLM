@@ -23,7 +23,7 @@ if __name__ == "__main__":
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         device_map="auto",
-
+        attn_implementation="flash_attention_2",
         torch_dtype=torch.bfloat16,
         quantization_config=bnb_config,
         low_cpu_mem_usage=True
@@ -74,7 +74,8 @@ if __name__ == "__main__":
     trainer = SFTTrainer(
         model=model,
         args=args,
-        train_dataset=dataset,
+        train_dataset=dataset["train"],
+        eval_dataset=dataset["test"],
         peft_config=peft_config,
     )
 
