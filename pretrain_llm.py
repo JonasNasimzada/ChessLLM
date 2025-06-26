@@ -24,7 +24,7 @@ if __name__ == "__main__":
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         device_map="auto",
-        attn_implementation="flash_attention_2",
+
         torch_dtype=torch.bfloat16,
         quantization_config=bnb_config,
         low_cpu_mem_usage=True
@@ -67,18 +67,24 @@ if __name__ == "__main__":
     max_seq_length = 2048  # max sequence length for model and packing of the dataset
 
     dataset = load_dataset("./data/")
+
+
+    def tokenize_function(examples):
+        return tokenizer(examples["text"], padding="max_length", truncation=True)
+
+
+    tokenized_datasets = dataset.map(tokenize_function, batched=True)
+
     trainer = SFTTrainer(
         model=model,
         args=args,
-        train_dataset=dataset,
+        train_dataset=tokenized_datasets,
         peft_config=peft_config,
-        max_seq_length=max_seq_length,
-        tokenizer=tokenizer,
-        packing=True,
-        dataset_kwargs={
-            "add_special_tokens": False,  # We template with special tokens
-            "append_concat_token": False,  # No need to add additional separator token
-        }
+        #max_seq_length=max_seq_length,
+        #tokenizer=tokenizer,
+        #packing=True,
+
+
     )
 
     trainer.train()
