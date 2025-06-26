@@ -71,17 +71,10 @@ if __name__ == "__main__":
                      },
                      )
 
-
-    def tokenize_function(examples):
-        return tokenizer(examples, padding="max_length", truncation=True)
-
-
-    tokenized_datasets = dataset.map(tokenize_function, batched=True)
-
     trainer = SFTTrainer(
         model=model,
         args=args,
-        train_dataset=tokenized_datasets,
+        train_dataset=dataset,
         peft_config=peft_config,
     )
 
