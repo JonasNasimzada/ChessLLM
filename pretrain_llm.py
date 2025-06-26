@@ -2,8 +2,8 @@ import torch
 from datasets import load_dataset
 from huggingface_hub import login
 from peft import LoraConfig
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-from trl import setup_chat_format, SFTTrainer, SFTConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, LlamaTokenizer
+from trl import setup_chat_format, SFTTrainer, SFTConfig, clone_chat_template
 
 if __name__ == "__main__":
     login(
@@ -77,6 +77,7 @@ if __name__ == "__main__":
         train_dataset=dataset["train"],
         eval_dataset=dataset["test"],
         peft_config=peft_config,
+        processing_class=tokenizer
     )
 
     trainer.train()
