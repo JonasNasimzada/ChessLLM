@@ -3,7 +3,7 @@ from datasets import load_dataset, Dataset
 
 system_message = """You are the best chest engine that plays chess games. As an input u get the current chess position postions of the past moves in FEN notation. You will generate the best chess move in UCI format. Here are the FEN notation of the past moves: {moves}"""
 
-user_message = """Current chess position in FEN notation: {fen} - what is the next best move in UCI format?"""
+user_message = """Current chess position in FEN notation: {fen} {{what is the next best move in UCI format?}}"""
 
 
 def instruction_format(sample):
@@ -18,65 +18,39 @@ def instruction_format(sample):
 
 if __name__ == "__main__":
     dataset = load_dataset("./trainings_data/", split="train")
-    df = pd.DataFrame(dataset)
-    df = df.sort_values(["game_index", "ply_index"])
+    ds = dataset.sort(["game_index", "ply_index"])
 
+    contexts = []
+    current_game = None
+    prev_fens = []
 
-    def add_context(group):
-        fens = group["fen"].tolist()
-        contexts = []
-        for i in range(len(fens)):
-            start = max(0, i - 27)
-            # join the previous fens (i.e. positions before the current ply)
-            before_fens = ", ".join(fens[start:i])
-            if before_fens == '':
-                contexts.append("no moves before")
-            else:
-                contexts.append(before_fens)
-        group["context"] = contexts
-        return group
+    for ex in ds:
+        gid = ex["game_index"]
+        fen = ex["fen"]
 
+        # if we hit a new game, reset history
+        if gid != current_game:
+            current_game = gid
+            prev_fens = []
 
-    df = df.groupby("game_index", group_keys=False).apply(add_context)
+        # take up to the last 27 fens before the current move
+        if len(prev_fens) == 0:
+            contexts.append("no moves before")
+        else:
+            start = max(0, len(prev_fens) - 27)
+            contexts.append(", ".join(prev_fens[start:]))
 
-    # df = df.sort_values(["game_index", "ply_index"], ignore_index=True)
-    #
-    # # 2) one‐pass loop to build contexts
-    # contexts = []
-    # current_game = None
-    # history = []  # will hold up to 27 last fens for the *current* game
-    #
-    # for row in df.itertuples(index=False):
-    #     game, fen = row.game_index, row.fen
-    #
-    #     # new game? reset your history buffer
-    #     if game != current_game:
-    #         current_game = game
-    #         history.clear()
-    #
-    #     # build the context string
-    #     if history:
-    #         contexts.append(", ".join(history[-27:]))
-    #     else:
-    #         contexts.append("no moves before")
-    #
-    #     # append the current fen to history
-    #     history.append(fen)
-    #
-    # # 3) assign back to your DataFrame
-    # df["context"] = contexts
+        # then record this move into history
+        prev_fens.append(fen)
 
-    print(df.head(3))
-    ds = Dataset.from_pandas(df)
+    # 3. Add the new column
+    ds = ds.add_column("context", contexts)
 
     # Convert dataset to OAI messages
-    dataset = ds.map(instruction_format, remove_columns=dataset.features, batched=True, batch_size=1000)
+    dataset = ds.map(instruction_format, remove_columns=ds.column_names, batched=True, batch_size=1000)
 
-    dataset = dataset.remove_columns(['context', '__index_level_0__'])
     # split dataset into 10,000 training samples and 2,500 test samples
     dataset = dataset.train_test_split(train_size=0.8, test_size=0.2)
-
-    print(dataset["train"][345]["messages"])
 
     # save datasets to disk
     dataset["train"].to_json("./data/train/train_dataset.json", orient="records")
