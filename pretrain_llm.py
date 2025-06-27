@@ -69,6 +69,7 @@ if __name__ == "__main__":
                          "add_special_tokens": False,  # We template with special tokens
                          "append_concat_token": False,  # No need to add additional separator token
                      },
+                     use_liger_kernel=True
                      )
 
     trainer = SFTTrainer(
@@ -82,10 +83,16 @@ if __name__ == "__main__":
 
     trainer.train()
 
-    # save model
+    trainer.accelerator.state.fsdp_plugin.set_state_dict_type('FULL_STATE_DICT')
+    trainer.model.config.use_cache = True
     trainer.save_model()
+    args.distributed_state.wait_for_everyone()
+    tokenizer.save_pretrained("pretrained_chess_llm")
+    trainer.push_to_hub()
+    # save model
+
     # Merge LoRA weights into the base model and save the full merged model
 
     # `trainer.model` is a PeftModel with LoRA adapters
-    full_model = trainer.model.merge_and_unload()
-    full_model.save_pretrained("pretrained_chess_llm_full")
+    # full_model = trainer.model.merge_and_unload()
+    # full_model.save_pretrained("pretrained_chess_llm_full")
