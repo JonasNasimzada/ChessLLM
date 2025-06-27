@@ -39,7 +39,7 @@ if __name__ == "__main__":
         else:
             start = max(0, len(prev_fens) - 15)
 
-            contexts.append("\n".join("{} {}".format(n, i) for n, i in enumerate(prev_fens[start:], start=1)))
+            contexts.append("\n".join("{}. {}".format(n, i) for n, i in enumerate(prev_fens[start:], start=1)))
 
         # then record this move into history
         prev_fens.append(fen)
