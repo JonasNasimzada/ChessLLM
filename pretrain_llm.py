@@ -43,7 +43,7 @@ if __name__ == "__main__":
         device_map={'': device_string},
         attn_implementation="flash_attention_2",
         torch_dtype=torch.bfloat16,
-        quantization_config=bnb_config,
+        #quantization_config=bnb_config,
         low_cpu_mem_usage=True,
     )
 
