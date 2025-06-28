@@ -10,7 +10,7 @@ def instruction_format(sample):
         "messages": [
             {"role": "system", "content": system_message},
             {"role": "user", "content": user_message.format(past_moves=sample["context"], current_move=sample["fen"])},
-            {"role": "assistant", "content": sample["move"]}
+            #{"role": "assistant", "content": sample["move"]}
         ]
     }
 
@@ -31,7 +31,6 @@ if __name__ == "__main__":
         if gid != current_game:
             current_game = gid
             prev_fens = []
-            counter = 0
 
         # take up to the last 15 fens before the current move
         if len(prev_fens) == 0:
