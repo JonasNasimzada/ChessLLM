@@ -10,13 +10,14 @@ def instruction_format(sample):
         "messages": [
             {"role": "system", "content": system_message},
             {"role": "user", "content": user_message.format(past_moves=sample["context"], current_move=sample["fen"])},
-            #{"role": "assistant", "content": sample["move"]}
+            # {"role": "assistant", "content": sample["move"]}
         ]
     }
 
 
 if __name__ == "__main__":
-    dataset = load_dataset("./trainings_data/", split="train")
+    # dataset = load_dataset("./trainings_data/", split="train")
+    dataset = load_dataset("csv", data_files="LumbrasGigaBase_OTB_2025_lite.csv", split="train")
     ds = dataset.sort(["game_index", "ply_index"])
 
     contexts = []
@@ -53,5 +54,5 @@ if __name__ == "__main__":
     dataset = dataset.train_test_split(train_size=0.8, test_size=0.2)
 
     # save datasets to disk
-    dataset["train"].to_json("./data/train/train_15_dataset.json", orient="records")
-    dataset["test"].to_json("./data/test/test_15_dataset.json", orient="records")
+    dataset["train"].to_json("./data/train/train_grpo_15_dataset.json", orient="records")
+    dataset["test"].to_json("./data/test/test_grpo_15_dataset.json", orient="records")
