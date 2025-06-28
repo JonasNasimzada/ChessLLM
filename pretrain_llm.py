@@ -1,3 +1,5 @@
+import os
+
 import torch
 from datasets import load_dataset
 from huggingface_hub import login
@@ -5,8 +7,21 @@ from peft import LoraConfig
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, LlamaTokenizer
 from trl import setup_chat_format, SFTTrainer, SFTConfig, clone_chat_template
 from accelerate import PartialState
+import torch.distributed as dist
+
 
 if __name__ == "__main__":
+    local_rank = int(os.environ.get("LOCAL_RANK", 0))
+    torch.cuda.set_device(local_rank)
+
+    # 1) Initialize your process group *after* binding the device
+    dist.init_process_group(
+        backend="nccl",
+        init_method="env://",  # matches torchrun / accelerate
+        world_size=int(os.environ["WORLD_SIZE"]),
+        rank=int(os.environ["RANK"])
+    )
+
     login(
         token="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",
         add_to_git_credential=True
@@ -29,7 +44,7 @@ if __name__ == "__main__":
         attn_implementation="flash_attention_2",
         torch_dtype=torch.bfloat16,
         quantization_config=bnb_config,
-        low_cpu_mem_usage=True
+        low_cpu_mem_usage=True,
     )
 
     tokenizer = AutoTokenizer.from_pretrained(model_id)
@@ -44,7 +59,7 @@ if __name__ == "__main__":
         r=256,
         bias="none",
         target_modules="all-linear",
-        task_type="CAUSAL_LM"
+        task_type="CAUSAL_LM",
     )
 
     max_seq_length = 2048  # max sequence length for model and packing of the dataset
@@ -73,8 +88,7 @@ if __name__ == "__main__":
                          "append_concat_token": False,  # No need to add additional separator token
                      },
                      use_liger_kernel=True,
-                     gradient_checkpointing_kwargs={'use_reentrant': False}
-
+                     gradient_checkpointing_kwargs={'use_reentrant': False},
                      )
 
     trainer = SFTTrainer(
