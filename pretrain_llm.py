@@ -4,6 +4,7 @@ from huggingface_hub import login
 from peft import LoraConfig
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, LlamaTokenizer
 from trl import setup_chat_format, SFTTrainer, SFTConfig, clone_chat_template
+from accelerate import PartialState
 
 if __name__ == "__main__":
     login(
@@ -12,6 +13,8 @@ if __name__ == "__main__":
     )
 
     model_id = "openlm-research/open_llama_3b_v2"
+
+    device_string = PartialState().process_index
 
     # BitsAndBytesConfig int-4 config
     bnb_config = BitsAndBytesConfig(
@@ -22,7 +25,7 @@ if __name__ == "__main__":
     # Load model and tokenizer
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
-        device_map="auto",
+        device_map={'': device_string},
         attn_implementation="flash_attention_2",
         torch_dtype=torch.bfloat16,
         quantization_config=bnb_config,
@@ -41,7 +44,7 @@ if __name__ == "__main__":
         r=256,
         bias="none",
         target_modules="all-linear",
-        task_type="CAUSAL_LM",
+        task_type="CAUSAL_LM"
     )
 
     max_seq_length = 2048  # max sequence length for model and packing of the dataset
@@ -69,7 +72,9 @@ if __name__ == "__main__":
                          "add_special_tokens": False,  # We template with special tokens
                          "append_concat_token": False,  # No need to add additional separator token
                      },
-                     use_liger_kernel=True
+                     use_liger_kernel=True,
+                     gradient_checkpointing_kwargs={'use_reentrant': False}
+
                      )
 
     trainer = SFTTrainer(
@@ -78,7 +83,7 @@ if __name__ == "__main__":
         train_dataset=dataset["train"],
         eval_dataset=dataset["test"],
         peft_config=peft_config,
-        processing_class=tokenizer
+        processing_class=tokenizer,
     )
 
     trainer.train()
