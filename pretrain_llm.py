@@ -11,16 +11,16 @@ import torch.distributed as dist
 
 
 if __name__ == "__main__":
-    local_rank = int(os.environ.get("LOCAL_RANK"))
-    torch.cuda.set_device(local_rank)
-
-    # 1) Initialize your process group *after* binding the device
-    dist.init_process_group(
-        backend="nccl",
-        init_method="env://",  # matches torchrun / accelerate
-        world_size=int(os.environ["WORLD_SIZE"]),
-        rank=int(os.environ["RANK"])
-    )
+    # local_rank = int(os.environ.get("LOCAL_RANK"),0)
+    # torch.cuda.set_device(local_rank)
+    #
+    # # 1) Initialize your process group *after* binding the device
+    # dist.init_process_group(
+    #     backend="nccl",
+    #     init_method="env://",  # matches torchrun / accelerate
+    #     world_size=int(os.environ["WORLD_SIZE"]),
+    #     rank=int(os.environ["RANK"])
+    # )
 
     login(
         token="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",
