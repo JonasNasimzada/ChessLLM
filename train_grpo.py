@@ -12,7 +12,7 @@ from trl import GRPOTrainer, GRPOConfig, setup_chat_format
 
 from utils import encoding
 
-STOCKFISH_PATH = "/home/hk-project-pai00012/st_st171793/chessLLM/stockfish/stockfish-ubuntu-x86-64-avx2"
+STOCKFISH_PATH = "/home/hk-project-pai00012/st_st171793/chessLLM/stockfish-ubuntu-x86-64-avx2"
 FEN_REGEX = r'^\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s([K|Q|k|q]{1,4})\s(-|[a-h][1-8])\s(\d+\s\d+)$'
 UCI_REGEX = r'^[a-h][1-8][a-h][1-8][nbrq]?$'
 
@@ -135,6 +135,7 @@ if __name__ == "__main__":
         torch_dtype=torch.bfloat16,
         low_cpu_mem_usage=True,
     )
+    model.use_cache = False  # Disable cache for training
 
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     tokenizer.padding_side = 'right'
