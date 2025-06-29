@@ -156,7 +156,7 @@ if __name__ == "__main__":
         ],
     )
     training_args = GRPOConfig(
-        use_vllm=True,
+        use_vllm=False,
         vllm_mode="colocate",
         vllm_gpu_memory_utilization=0.4,
         vllm_tensor_parallel_size=1,
