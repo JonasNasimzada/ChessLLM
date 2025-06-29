@@ -18,7 +18,8 @@ UCI_REGEX = r'^[a-h][1-8][a-h][1-8][nbrq]?$'
 
 
 def isolate_fen_notation(prompt):
-    user_prompt = prompt['messages'][1]["content"]
+    print(prompt)
+    user_prompt = prompt[1]["content"]
     search = re.search(FEN_REGEX, user_prompt)
     if search:
         fen = search.group(1)
@@ -28,7 +29,8 @@ def isolate_fen_notation(prompt):
 
 
 def isolate_move_notation(response):
-    search = re.search(FEN_REGEX, response)
+    print(response)
+    search = re.search(UCI_REGEX, response)
     if search:
         uci = search.group(1)
         return uci
@@ -199,12 +201,13 @@ if __name__ == "__main__":
         args=training_args,
         train_dataset=dataset['train'],
         eval_dataset=dataset['test'],
-        peft_config=peft_config
+        peft_config=peft_config,
     )
+    trainer.model.config.use_cache = False
     trainer.train()
 
     trainer.accelerator.state.fsdp_plugin.set_state_dict_type('FULL_STATE_DICT')
-    trainer.model.config.use_cache = True
+
     trainer.save_model()
     training_args.distributed_state.wait_for_everyone()
     tokenizer.save_pretrained("rl_chess_engine")
