@@ -159,6 +159,7 @@ if __name__ == "__main__":
         use_vllm=True,
         vllm_mode="colocate",
         vllm_gpu_memory_utilization=0.4,
+        vllm_tensor_parallel_size=1,
         learning_rate=1e-5,
         adam_beta1=0.9,
         adam_beta2=0.99,
