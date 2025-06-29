@@ -8,7 +8,7 @@ from datasets import load_dataset
 from peft import LoraConfig
 from stockfish import Stockfish
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from trl import GRPOTrainer, GRPOConfig
+from trl import GRPOTrainer, GRPOConfig, setup_chat_format
 
 from utils import encoding
 
@@ -138,6 +138,8 @@ if __name__ == "__main__":
 
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     tokenizer.padding_side = 'right'
+
+    model, tokenizer = setup_chat_format(model, tokenizer)
 
     peft_config = LoraConfig(
         lora_alpha=64,
