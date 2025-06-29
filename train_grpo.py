@@ -5,9 +5,9 @@ import chess
 import torch
 from accelerate import PartialState
 from datasets import load_dataset
-from peft import LoraConfig
+from peft import LoraConfig, AutoPeftModelForCausalLM
 from stockfish import Stockfish
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoTokenizer
 from trl import GRPOTrainer, GRPOConfig
 
 from utils import encoding
@@ -128,7 +128,7 @@ if __name__ == "__main__":
     model_id = "JonasNasimzada/pretrained_chess_llm_ToC"
     device_string = PartialState().process_index
 
-    model = AutoModelForCausalLM.from_pretrained(
+    model = AutoPeftModelForCausalLM.from_pretrained(
         model_id,
         device_map={'': device_string},
         attn_implementation="flash_attention_2",
