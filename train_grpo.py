@@ -15,6 +15,8 @@ from utils import encoding
 STOCKFISH_PATH = "/home/hk-project-pai00012/st_st171793/chessLLM/stockfish-ubuntu-x86-64-avx2"
 FEN_REGEX = r'^\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s([K|Q|k|q]{1,4})\s(-|[a-h][1-8])\s(\d+\s\d+)$'
 UCI_REGEX = r'^[a-h][1-8][a-h][1-8][nbrq]?$'
+STOCKFISH = Stockfish(STOCKFISH_PATH)
+STOCKFISH.set_skill_level(20)
 
 
 def isolate_fen_notation(prompt):
@@ -41,17 +43,16 @@ def isolate_move_notation(response):
 def stockfish_reward(prompts, completions, **kwargs):
     rewards = []
     for prompt, completion in zip(prompts, completions):
-        engine = Stockfish(STOCKFISH_PATH)
-        engine.set_skill_level(20)
+
         fen = isolate_fen_notation(prompt)
-        engine.set_fen_position(fen)
-        rating_before = engine.get_evaluation()['value']
+        STOCKFISH.set_fen_position(fen)
+        rating_before = STOCKFISH.get_evaluation()['value']
         move = isolate_move_notation(completion)
         if not move:
             rewards.append(-5.0)
             continue
-        engine.make_moves_from_current_position([move])
-        rating_after = engine.get_evaluation()['value']
+        STOCKFISH.make_moves_from_current_position([move])
+        rating_after = STOCKFISH.get_evaluation()['value']
         reward = rating_after - rating_before
         rewards.append(reward)
     return rewards
