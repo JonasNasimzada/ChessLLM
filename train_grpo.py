@@ -109,6 +109,9 @@ def valid_uci_move_reward(prompts, completions, **kwargs):
         fen = isolate_fen_notation(prompt)
         chess_board = chess.Board(fen)
         move_str = isolate_move_notation(completion)
+        if not move_str:
+            rewards.append(-5.0)
+            continue
         try:
             move = chess.Move.from_uci(move_str)
             if move in chess_board.legal_moves:
