@@ -90,10 +90,9 @@ def piece_reward(prompts, completions, **kwargs):
         move = chess.Move.from_uci(move_str)
         chess_board.push(move)
         lost, captured = encoding.evaluate_board_difference_score(old_board, chess_board)
-        lost_count = -abs(sum(encoding.piece_reward[piece] for piece in lost))
+        lost_count = -abs(sum(encoding.piece_reward[piece] for piece in lost) + 1)
         captured_count = sum(encoding.piece_reward[piece] for piece in captured)
-        if not ((lost_count + captured_count) is 0):
-            rewards.append(lost_count + captured_count)
+        rewards.append(lost_count + captured_count)
     return rewards
 
 
