@@ -11,20 +11,23 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import GRPOTrainer, GRPOConfig, setup_chat_format
 
 from utils import encoding
+from utils.stockfish import StockfishAgent
 
 STOCKFISH_PATH = "/home/hk-project-pai00012/st_st171793/chessLLM/stockfish-ubuntu-x86-64-avx2"
 FEN_REGEX = r'^\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s([K|Q|k|q]{1,4})\s(-|[a-h][1-8])\s(\d+\s\d+)$'
 UCI_REGEX = r'^[a-h][1-8][a-h][1-8][nbrq]?$'
-STOCKFISH = Stockfish(STOCKFISH_PATH)
-STOCKFISH.set_skill_level(20)
+# STOCKFISH = Stockfish(STOCKFISH_PATH)
+# STOCKFISH.set_skill_level(20)
+
+STOCKFISH = StockfishAgent(STOCKFISH_PATH)
 
 
 def isolate_fen_notation(prompt):
     print(prompt)
     user_prompt = prompt[1]["content"]
-    search = re.search(FEN_REGEX, user_prompt)
+    search = re.findall(FEN_REGEX, user_prompt)
     if search:
-        fen = search.group(1)
+        fen = search[-1]
         return fen
     else:
         return None
@@ -143,7 +146,7 @@ if __name__ == "__main__":
     tokenizer.padding_side = 'right'
 
     model, tokenizer = setup_chat_format(model, tokenizer)
-    #model.use_cache = False
+    model.use_cache = False
 
     peft_config = LoraConfig(
         lora_alpha=64,
@@ -191,14 +194,14 @@ if __name__ == "__main__":
         report_to="wandb",
         output_dir="rl_chess_engine",
         push_to_hub=True,
-        use_liger_kernel=False
+        use_liger_kernel=True
 
     )
 
     trainer = GRPOTrainer(
         model=model,
         processing_class=tokenizer,
-        reward_funcs=[stockfish_reward, end_game_reward, piece_reward, valid_uci_move_reward, format_reward_func],
+        reward_funcs=[end_game_reward, piece_reward, valid_uci_move_reward, format_reward_func],
         args=training_args,
         train_dataset=dataset['train'],
         eval_dataset=dataset['test'],
