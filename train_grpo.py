@@ -23,7 +23,6 @@ STOCKFISH = StockfishAgent(STOCKFISH_PATH)
 
 
 def isolate_fen_notation(prompt):
-    print(prompt)
     user_prompt = prompt[1]["content"]
     search = re.findall(FEN_REGEX, user_prompt)
     if search:
@@ -35,6 +34,7 @@ def isolate_fen_notation(prompt):
 
 def isolate_move_notation(response):
     print(response)
+    response = response[0]["content"]
     search = re.search(UCI_REGEX, response)
     if search:
         uci = search.group(1)
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     tokenizer.padding_side = 'right'
 
     model, tokenizer = setup_chat_format(model, tokenizer)
-    model.use_cache = False
+    #model.config.use_cache = False
 
     peft_config = LoraConfig(
         lora_alpha=64,
@@ -179,7 +179,7 @@ if __name__ == "__main__":
         optim="adamw_8bit",
         bf16=True,
         fp16=False,
-        gradient_checkpointing=True,
+        gradient_checkpointing=False,
         gradient_checkpointing_kwargs={"use_reentrant": False},
         gradient_accumulation_steps=4,
         per_device_train_batch_size=4,
@@ -194,7 +194,7 @@ if __name__ == "__main__":
         report_to="wandb",
         output_dir="rl_chess_engine",
         push_to_hub=True,
-        use_liger_kernel=True
+        use_liger_kernel=False,
 
     )
 
