@@ -137,12 +137,12 @@ if __name__ == "__main__":
         torch_dtype=torch.bfloat16,
         low_cpu_mem_usage=True,
     )
-    model.use_cache = False  # Disable cache for training
 
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     tokenizer.padding_side = 'right'
 
     model, tokenizer = setup_chat_format(model, tokenizer)
+    #model.use_cache = False
 
     peft_config = LoraConfig(
         lora_alpha=64,
@@ -190,7 +190,7 @@ if __name__ == "__main__":
         report_to="wandb",
         output_dir="rl_chess_engine",
         push_to_hub=True,
-        use_liger_kernel=True,
+        use_liger_kernel=False
 
     )
 
