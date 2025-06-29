@@ -12,7 +12,7 @@ from trl import GRPOTrainer, GRPOConfig
 
 from utils import encoding
 
-STOCKFISH_PATH = "/home/hk-project-pai00012/st_st171793/chessLLM/ChessLLM/stockfish/stockfish-ubuntu-x86-64-avx2 "
+STOCKFISH_PATH = "/home/hk-project-pai00012/st_st171793/chessLLM/ChessLLM/stockfish/stockfish-ubuntu-x86-64-avx2"
 FEN_REGEX = r'^\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s([K|Q|k|q]{1,4})\s(-|[a-h][1-8])\s(\d+\s\d+)$'
 UCI_REGEX = r'^[a-h][1-8][a-h][1-8][nbrq]?$'
 
