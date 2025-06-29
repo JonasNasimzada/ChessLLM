@@ -124,7 +124,7 @@ def format_reward_func(completions, **kwargs):
 
 
 if __name__ == "__main__":
-    dataset = load_dataset("./grpo/")  # Load your dataset here
+    dataset = load_dataset("./grpo_data/")  # Load your dataset here
 
     model_id = "JonasNasimzada/pretrained_chess_llm"
     device_string = PartialState().process_index
