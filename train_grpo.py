@@ -5,9 +5,9 @@ import chess
 import torch
 from accelerate import PartialState
 from datasets import load_dataset
-from peft import LoraConfig, AutoPeftModelForCausalLM
+from peft import LoraConfig
 from stockfish import Stockfish
-from transformers import AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import GRPOTrainer, GRPOConfig
 
 from utils import encoding
@@ -125,10 +125,10 @@ def format_reward_func(completions, **kwargs):
 if __name__ == "__main__":
     dataset = load_dataset("./grpo_data/")  # Load your dataset here
 
-    model_id = "JonasNasimzada/pretrained_chess_llm_ToC"
+    model_id = "openlm-research/open_llama_3b_v2"
     device_string = PartialState().process_index
 
-    model = AutoPeftModelForCausalLM.from_pretrained(
+    model = AutoModelForCausalLM.from_pretrained(
         model_id,
         device_map={'': device_string},
         attn_implementation="flash_attention_2",
