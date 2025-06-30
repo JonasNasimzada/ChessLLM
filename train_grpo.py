@@ -139,7 +139,7 @@ def load_pretrained_model():
     )
     tokenizer = AutoTokenizer.from_pretrained(base_model_id)
     tokenizer.padding_side = "right"
-    peft_config = LoraConfig(
+    pre_trained_peft_config = LoraConfig(
         lora_alpha=128,
         lora_dropout=0.05,
         r=256,
@@ -147,7 +147,7 @@ def load_pretrained_model():
         target_modules="all-linear",
         task_type="CAUSAL_LM",
     )
-    lora_model = get_peft_model(base_model, peft_config)
+    lora_model = get_peft_model(base_model, pre_trained_peft_config)
     model = PeftModel.from_pretrained(
         lora_model,
         "JonasNasimzada/pretrained_chess_llm_ToC",
@@ -162,7 +162,7 @@ def load_pretrained_model():
 if __name__ == "__main__":
     dataset = load_dataset("./grpo_data/")  # Load your dataset here
 
-    model, tokenizer = load_pretrained_model()
+    pre_trained_model, pre_trained_tokenizer = load_pretrained_model()
 
     peft_config = LoraConfig(
         lora_alpha=64,
@@ -215,8 +215,8 @@ if __name__ == "__main__":
     )
 
     trainer = GRPOTrainer(
-        model=model,
-        processing_class=tokenizer,
+        model=pre_trained_model,
+        processing_class=pre_trained_tokenizer,
         reward_funcs=[end_game_reward, piece_reward, valid_uci_move_reward, format_reward_func],
         args=training_args,
         train_dataset=dataset['train'],
@@ -227,5 +227,5 @@ if __name__ == "__main__":
 
     trainer.save_model()
     training_args.distributed_state.wait_for_everyone()
-    tokenizer.save_pretrained("rl_chess_engine")
+    pre_trained_tokenizer.save_pretrained("rl_chess_engine")
     trainer.push_to_hub()
