@@ -156,35 +156,19 @@ def load_pretrained_model():
         device_map="auto",
         is_trainable=True,
     )
-    return model, tokenizer
+    return model, tokenizer, pre_trained_peft_config
 
 
 if __name__ == "__main__":
     dataset = load_dataset("./grpo_data/")  # Load your dataset here
 
-    pre_trained_model, pre_trained_tokenizer = load_pretrained_model()
+    pre_trained_model, pre_trained_tokenizer, peft_config = load_pretrained_model()
     pre_trained_model.unload()
-    pre_trained_model, pre_trained_tokenizer = load_pretrained_model()
+    print("Pre-trained model loaded and unloaded successfully.")
+    pre_trained_model, pre_trained_tokenizer, peft_config = load_pretrained_model()
 
     pre_trained_model, pre_trained_tokenizer = setup_chat_format(pre_trained_model, pre_trained_tokenizer)
 
-
-    peft_config = LoraConfig(
-        lora_alpha=64,
-        lora_dropout=0,
-        r=64,
-        bias="none",
-        task_type="CAUSAL_LM",
-        target_modules=[
-            "q_proj",
-            "k_proj",
-            "v_proj",
-            "o_proj",
-            "gate_proj",
-            "up_proj",
-            "down_proj",
-        ],
-    )
     training_args = GRPOConfig(
         use_vllm=False,
         vllm_mode="colocate",
