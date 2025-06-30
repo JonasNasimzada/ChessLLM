@@ -33,7 +33,6 @@ def isolate_fen_notation(prompt):
 
 
 def isolate_move_notation(response):
-    print(response)
     response = response[0]["content"]
     search = re.search(UCI_REGEX, response)
     if search:
