@@ -187,7 +187,7 @@ if __name__ == "__main__":
         temperature=0.5,
         max_prompt_length=1948,
         max_completion_length=100,
-        num_train_epochs=2,
+        num_train_epochs=1,
         logging_steps=100,
         save_steps=500,
         max_grad_norm=0.1,
