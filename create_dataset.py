@@ -8,53 +8,53 @@ user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is 
 
 def instruction_format(sample):
     return {
-        "messages": [
+        "prompt": [
             {"role": "system", "content": system_message},
-            # {"role": "user", "content": user_message.format(past_moves=sample["context"], current_move=sample["fen"])},
-            {"role": "user", "content": user_message_no_context.format(current_move=sample["fen"])},
-            {"role": "assistant", "content": sample["move"]}
+            {"role": "user", "content": user_message.format(past_moves=sample["context"], current_move=sample["fen"])},
+            # {"role": "user", "content": user_message_no_context.format(current_move=sample["fen"])},
+            # {"role": "assistant", "content": sample["move"]}
         ]
     }
 
 
 if __name__ == "__main__":
-    dataset = load_dataset("./trainings_data/", split="train")
-    # dataset = load_dataset("csv", data_files="LumbrasGigaBase_OTB_2025_lite.csv", split="train")
+    # dataset = load_dataset("./trainings_data/", split="train")
+    dataset = load_dataset("csv", data_files="2500_grpo.csv", split="train")
     ds = dataset.sort(["game_index", "ply_index"])
 
     contexts = []
     current_game = None
     prev_fens = []
 
-    # for ex in ds:
-    #     gid = ex["game_index"]
-    #     fen = ex["fen"]
-    #
-    #     # if we hit a new game, reset history
-    #     if gid != current_game:
-    #         current_game = gid
-    #         prev_fens = []
-    #
-    #     # take up to the last 15 fens before the current move
-    #     if len(prev_fens) == 0:
-    #         contexts.append("no moves before")
-    #     else:
-    #         start = max(0, len(prev_fens) - 15)
-    #
-    #         contexts.append("\n".join("{}. {}".format(n, i) for n, i in enumerate(prev_fens[start:], start=1)))
-    #
-    #     # then record this move into history
-    #     prev_fens.append(fen)
-    #
-    # # 3. Add the new column
-    # ds = ds.add_column("context", contexts)
+    for ex in ds:
+        gid = ex["game_index"]
+        fen = ex["fen"]
+
+        # if we hit a new game, reset history
+        if gid != current_game:
+            current_game = gid
+            prev_fens = []
+
+        # take up to the last 15 fens before the current move
+        if len(prev_fens) == 0:
+            contexts.append("no moves before")
+        else:
+            start = max(0, len(prev_fens) - 15)
+
+            contexts.append("\n".join("{}. {}".format(n, i) for n, i in enumerate(prev_fens[start:], start=1)))
+
+        # then record this move into history
+        prev_fens.append(fen)
+
+    # 3. Add the new column
+    ds = ds.add_column("context", contexts)
 
     # Convert dataset to OAI messages
     dataset = ds.map(instruction_format, remove_columns=ds.column_names)
 
     # split dataset into 10,000 training samples and 2,500 test samples
-    dataset = dataset.train_test_split(train_size=0.8, test_size=0.2)
+    dataset = dataset.train_test_split(train_size=0.9, test_size=0.1)
 
     # save datasets to disk
-    dataset["train"].to_json("./sftrain_no_context/train_no_context_15_dataset.json", orient="records")
-    dataset["test"].to_json("./sftrain_no_context/test_no_context_15_dataset.json", orient="records")
+    dataset["train"].to_json("./grpo_data/train_grpo_15_dataset.json", orient="records")
+    dataset["test"].to_json("./grpo_data/test_grpo_15_dataset.json", orient="records")
