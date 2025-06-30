@@ -9,7 +9,6 @@ from trl import setup_chat_format, SFTTrainer, SFTConfig, clone_chat_template
 from accelerate import PartialState
 import torch.distributed as dist
 
-
 if __name__ == "__main__":
     # local_rank = int(os.environ.get("LOCAL_RANK"),0)
     # torch.cuda.set_device(local_rank)
@@ -43,7 +42,7 @@ if __name__ == "__main__":
         device_map={'': device_string},
         attn_implementation="flash_attention_2",
         torch_dtype=torch.bfloat16,
-        #quantization_config=bnb_config,
+        # quantization_config=bnb_config,
         low_cpu_mem_usage=True,
     )
 
@@ -100,7 +99,7 @@ if __name__ == "__main__":
         processing_class=tokenizer,
     )
 
-    trainer.train()
+    trainer.train(resume_from_checkpoint=True)
 
     trainer.save_model()
     args.distributed_state.wait_for_everyone()
