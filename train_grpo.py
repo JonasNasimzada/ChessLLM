@@ -146,7 +146,7 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     tokenizer.padding_side = 'right'
 
-    model, tokenizer = setup_chat_format(model, tokenizer)
+    # model, tokenizer = setup_chat_format(model, tokenizer)
 
     peft_config = LoraConfig(
         lora_alpha=64,
