@@ -64,8 +64,8 @@ if __name__ == "__main__":
 
     max_seq_length = 2048  # max sequence length for model and packing of the dataset
 
-    dataset = load_dataset("./sftrain_no_context/")
-    args = SFTConfig(output_dir="pretrained_chess_llm_ToC_no_context",  # directory to save and repository id
+    dataset = load_dataset("./data/")
+    args = SFTConfig(output_dir="pretrained_chess_llm_ToC",  # directory to save and repository id
                      num_train_epochs=3,  # number of training epochs
                      per_device_train_batch_size=3,  # batch size per device during training
                      gradient_accumulation_steps=2,  # number of steps before performing a backward/update pass
@@ -102,11 +102,10 @@ if __name__ == "__main__":
 
     trainer.train()
 
-    trainer.accelerator.state.fsdp_plugin.set_state_dict_type('FULL_STATE_DICT')
-    trainer.model.config.use_cache = True
     trainer.save_model()
     args.distributed_state.wait_for_everyone()
-    tokenizer.save_pretrained("pretrained_chess_llm_ToC_no_context")
+    full_model = trainer.model.merge_and_unload()
+    full_model.save_pretrained("pretrained_chess_llm_full")
     trainer.push_to_hub()
     # save model
 
