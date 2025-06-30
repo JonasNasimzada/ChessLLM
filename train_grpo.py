@@ -5,7 +5,7 @@ import chess
 import torch
 from accelerate import PartialState
 from datasets import load_dataset
-from peft import LoraConfig, AutoPeftModelForCausalLM
+from peft import LoraConfig, AutoPeftModelForCausalLM, get_peft_model, PeftModel
 from stockfish import Stockfish
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import GRPOTrainer, GRPOConfig, setup_chat_format
@@ -130,22 +130,39 @@ def format_reward_func(completions, **kwargs):
     return [1.0 if match else -1.0 for match in matches]
 
 
+def load_pretrained_model():
+    base_model_id = "openlm-research/open_llama_3b_v2"
+    base_model = AutoModelForCausalLM.from_pretrained(
+        base_model_id,
+        device_map="auto",
+        torch_dtype=torch.float16,
+    )
+    tokenizer = AutoTokenizer.from_pretrained(base_model_id)
+    tokenizer.padding_side = "right"
+    peft_config = LoraConfig(
+        lora_alpha=128,
+        lora_dropout=0.05,
+        r=256,
+        bias="none",
+        target_modules="all-linear",
+        task_type="CAUSAL_LM",
+    )
+    lora_model = get_peft_model(base_model, peft_config)
+    model = PeftModel.from_pretrained(
+        lora_model,
+        "JonasNasimzada/pretrained_chess_llm_ToC",
+        from_tf=False,
+        torch_dtype=torch.float16,
+        device_map="auto",
+        is_trainable=True,
+    )
+    return model, tokenizer
+
+
 if __name__ == "__main__":
     dataset = load_dataset("./grpo_data/")  # Load your dataset here
 
-    model_id = "JonasNasimzada/pretrained_chess_llm_ToC"
-
-    model = AutoPeftModelForCausalLM.from_pretrained(
-        model_id,
-        device_map="auto",
-        torch_dtype=torch.float16,
-        is_trainable=True
-    )
-
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
-    tokenizer.padding_side = 'right'
-
-    # model, tokenizer = setup_chat_format(model, tokenizer)
+    model, tokenizer = load_pretrained_model()
 
     peft_config = LoraConfig(
         lora_alpha=64,
@@ -208,8 +225,6 @@ if __name__ == "__main__":
     )
     trainer.train()
 
-    trainer.accelerator.state.fsdp_plugin.set_state_dict_type('FULL_STATE_DICT')
-    trainer.model.config.use_cache = True
     trainer.save_model()
     training_args.distributed_state.wait_for_everyone()
     tokenizer.save_pretrained("rl_chess_engine")
