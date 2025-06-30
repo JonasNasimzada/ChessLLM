@@ -163,6 +163,9 @@ if __name__ == "__main__":
     dataset = load_dataset("./grpo_data/")  # Load your dataset here
 
     pre_trained_model, pre_trained_tokenizer = load_pretrained_model()
+    pre_trained_model.unload()
+    pre_trained_model, pre_trained_tokenizer = load_pretrained_model()
+
 
     peft_config = LoraConfig(
         lora_alpha=64,
