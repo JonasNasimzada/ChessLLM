@@ -5,7 +5,7 @@ import chess
 import torch
 from accelerate import PartialState
 from datasets import load_dataset
-from peft import LoraConfig
+from peft import LoraConfig, AutoPeftModelForCausalLM
 from stockfish import Stockfish
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import GRPOTrainer, GRPOConfig, setup_chat_format
@@ -134,22 +134,19 @@ def format_reward_func(completions, **kwargs):
 if __name__ == "__main__":
     dataset = load_dataset("./grpo_data/")  # Load your dataset here
 
-    model_id = "openlm-research/open_llama_3b_v2"
-    device_string = PartialState().process_index
+    model_id = "JonasNasimzada/pretrained_chess_llm_ToC"
 
-    model = AutoModelForCausalLM.from_pretrained(
+    model = AutoPeftModelForCausalLM.from_pretrained(
         model_id,
-        device_map={'': device_string},
-        attn_implementation="flash_attention_2",
-        torch_dtype=torch.bfloat16,
-        low_cpu_mem_usage=True,
+        device_map="auto",
+        torch_dtype=torch.float16,
+        is_trainable=True
     )
 
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     tokenizer.padding_side = 'right'
 
     model, tokenizer = setup_chat_format(model, tokenizer)
-    #model.config.use_cache = False
 
     peft_config = LoraConfig(
         lora_alpha=64,
@@ -210,11 +207,10 @@ if __name__ == "__main__":
         eval_dataset=dataset['test'],
         peft_config=peft_config,
     )
-    trainer.model.config.use_cache = False
     trainer.train()
 
     trainer.accelerator.state.fsdp_plugin.set_state_dict_type('FULL_STATE_DICT')
-
+    trainer.model.config.use_cache = True
     trainer.save_model()
     training_args.distributed_state.wait_for_everyone()
     tokenizer.save_pretrained("rl_chess_engine")
