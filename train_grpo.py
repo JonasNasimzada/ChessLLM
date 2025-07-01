@@ -107,7 +107,6 @@ def piece_reward(prompts, completions, **kwargs):
 def is_uci_reward(prompts, completions, **kwargs):
     """Reward function that checks if the completion is a valid UCI move."""
     rewards = []
-    print()
     for prompt, completion in zip(prompts, completions):
         print(completion)
         move_str = isolate_move_notation(completion)
@@ -207,14 +206,14 @@ if __name__ == "__main__":
         per_device_train_batch_size=2,
         num_generations=4,
         temperature=0.5,
-        max_prompt_length=1948,
-        max_completion_length=100,
-        num_train_epochs=1,
+        max_prompt_length=1548,
+        max_completion_length=400,
+        num_train_epochs=2,
         logging_steps=100,
         save_steps=500,
         max_grad_norm=0.1,
         report_to="wandb",
-        output_dir="rl_chess_engine2",
+        output_dir="rl_chess_engine3",
         push_to_hub=True,
         use_liger_kernel=False,
 
@@ -239,5 +238,5 @@ if __name__ == "__main__":
     pre_trained_model.merge_and_unload()
     trainer.save_model()
     training_args.distributed_state.wait_for_everyone()
-    pre_trained_tokenizer.save_pretrained("rl_chess_engine2")
+    pre_trained_tokenizer.save_pretrained("rl_chess_engine3")
     trainer.push_to_hub()
