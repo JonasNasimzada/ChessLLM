@@ -104,6 +104,18 @@ def piece_reward(prompts, completions, **kwargs):
     return rewards
 
 
+def is_uci_reward(prompts, completions, **kwargs):
+    """Reward function that checks if the completion is a valid UCI move."""
+    rewards = []
+    for prompt, completion in zip(prompts, completions):
+        move_str = isolate_move_notation(completion)
+        if not move_str:
+            rewards.append(-1.0)
+            continue
+        rewards.append(1.0)
+    return rewards
+
+
 def valid_uci_move_reward(prompts, completions, **kwargs):
     """Reward function that checks if the completion is a valid UCI move."""
     rewards = []
@@ -215,7 +227,7 @@ if __name__ == "__main__":
     trainer = GRPOTrainer(
         model=pre_trained_model,
         processing_class=pre_trained_tokenizer,
-        reward_funcs=[valid_uci_move_reward],
+        reward_funcs=[is_uci_reward],
         args=training_args,
         train_dataset=dataset['train'],
         eval_dataset=dataset['test'],
