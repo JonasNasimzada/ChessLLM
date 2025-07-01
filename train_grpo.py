@@ -26,6 +26,7 @@ def isolate_fen_notation(prompt):
     user_prompt = prompt[1]["content"]
     search = re.findall(FEN_REGEX, user_prompt)
     if search:
+        print("found fen")
         fen = search[-1]
         return fen
     else:
@@ -37,6 +38,7 @@ def isolate_move_notation(response):
     response = response[0]["content"]
     search = re.search(UCI_REGEX, response)
     if search:
+        print("found uci")
         uci = search.group(1)
         return uci
     else:
@@ -207,11 +209,11 @@ if __name__ == "__main__":
     trainer = GRPOTrainer(
         model=pre_trained_model,
         processing_class=pre_trained_tokenizer,
-        reward_funcs=[end_game_reward, piece_reward, valid_uci_move_reward, format_reward_func],
+        reward_funcs=[valid_uci_move_reward, format_reward_func],
         args=training_args,
         train_dataset=dataset['train'],
         eval_dataset=dataset['test'],
-        #peft_config=peft_config,
+        peft_config=peft_config,
     )
     trainer.train()
     pre_trained_model.merge_and_unload()
