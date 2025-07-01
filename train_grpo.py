@@ -189,8 +189,6 @@ if __name__ == "__main__":
         fp16=False,
         gradient_checkpointing=False,
         gradient_checkpointing_kwargs={"use_reentrant": False},
-        gradient_accumulation_steps=4,
-        per_device_train_batch_size=4,
         num_generations=4,
         temperature=0.5,
         max_prompt_length=1948,
