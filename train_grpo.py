@@ -205,7 +205,13 @@ if __name__ == "__main__":
         use_liger_kernel=False,
 
     )
-
+    rl_peft_config = LoraConfig(
+        r=16,
+        lora_alpha=64,
+        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "up_proj", "down_proj", "gate_proj"],
+        task_type="CAUSAL_LM",
+        lora_dropout=0.05,
+    )
     trainer = GRPOTrainer(
         model=pre_trained_model,
         processing_class=pre_trained_tokenizer,
@@ -213,7 +219,7 @@ if __name__ == "__main__":
         args=training_args,
         train_dataset=dataset['train'],
         eval_dataset=dataset['test'],
-        peft_config=peft_config,
+        peft_config=rl_peft_config,
     )
     trainer.train()
     pre_trained_model.merge_and_unload()
