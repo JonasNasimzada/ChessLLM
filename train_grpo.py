@@ -90,7 +90,7 @@ def piece_reward(prompts, completions, **kwargs):
         old_board = copy.deepcopy(chess_board)
         move_str = isolate_move_notation(completion)
         if not move_str:
-            rewards.append(-5.0)
+            rewards.append(-1.0)
             continue
         move = chess.Move.from_uci(move_str)
         chess_board.push(move)
@@ -109,16 +109,16 @@ def valid_uci_move_reward(prompts, completions, **kwargs):
         chess_board = chess.Board(fen)
         move_str = isolate_move_notation(completion)
         if not move_str:
-            rewards.append(-5.0)
+            rewards.append(-1.0)
             continue
         try:
             move = chess.Move.from_uci(move_str)
             if move in chess_board.legal_moves:
                 rewards.append(1.0)
             else:
-                rewards.append(-5.0)
+                rewards.append(-1.0)
         except ValueError:
-            rewards.append(-5.0)
+            rewards.append(-1.0)
     return rewards
 
 
@@ -197,7 +197,7 @@ if __name__ == "__main__":
         save_steps=500,
         max_grad_norm=0.1,
         report_to="wandb",
-        output_dir="rl_chess_engine",
+        output_dir="rl_chess_engine2",
         push_to_hub=True,
         use_liger_kernel=False,
 
@@ -213,8 +213,8 @@ if __name__ == "__main__":
         #peft_config=peft_config,
     )
     trainer.train()
-
+    pre_trained_model.merge_and_unload()
     trainer.save_model()
     training_args.distributed_state.wait_for_everyone()
-    pre_trained_tokenizer.save_pretrained("rl_chess_engine")
+    pre_trained_tokenizer.save_pretrained("rl_chess_engine2")
     trainer.push_to_hub()
