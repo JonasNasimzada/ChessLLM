@@ -215,7 +215,7 @@ if __name__ == "__main__":
     trainer = GRPOTrainer(
         model=pre_trained_model,
         processing_class=pre_trained_tokenizer,
-        reward_funcs=[valid_uci_move_reward, format_reward_func],
+        reward_funcs=[valid_uci_move_reward],
         args=training_args,
         train_dataset=dataset['train'],
         eval_dataset=dataset['test'],
