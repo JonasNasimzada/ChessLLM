@@ -107,7 +107,9 @@ def piece_reward(prompts, completions, **kwargs):
 def is_uci_reward(prompts, completions, **kwargs):
     """Reward function that checks if the completion is a valid UCI move."""
     rewards = []
+    print()
     for prompt, completion in zip(prompts, completions):
+        print(completion)
         move_str = isolate_move_notation(completion)
         if not move_str:
             rewards.append(-1.0)
