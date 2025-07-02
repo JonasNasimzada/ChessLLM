@@ -23,7 +23,8 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str) -> None:
         writer.writerow(["game_index", "ply_index", "move", "fen"])
 
         game_index = 0
-        while True:
+        i = 0
+        while i < 100000:  # Arbitrary large number to prevent infinite loop
             game = chess.pgn.read_game(pgn_file)
             if game is None:
                 break
@@ -34,6 +35,7 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str) -> None:
             ply_index = 0
             for move in game.mainline_moves():
                 ply_index += 1
+                fen = board.fen()
 
                 # Get the UCI for this move before pushing
                 uci = board.uci(move)
@@ -41,11 +43,9 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str) -> None:
                 # Push the move onto the board
                 board.push(move)
 
-                # Get FEN after this move
-                fen = board.fen()
-
                 # Write one line per half-move
                 writer.writerow([game_index, ply_index, uci, fen])
+            i += 1
 
     print(f"Done! Wrote every ply’s UCI and FEN to: {csv_path}")
 
@@ -59,5 +59,5 @@ if __name__ == "__main__":
     #             extract_all_fens_from_pgn(os.path.join(dirpath, file),
     #                                       os.path.join(dirpath, file.replace(".pgn", ".csv")))
 
-    INPUT_PGN_FILE = "../data_chess/LumbrasGigaBase_OTB_2025.pgn"
-    extract_all_fens_from_pgn(INPUT_PGN_FILE, INPUT_PGN_FILE.replace(".pgn", ".csv"))
+    INPUT_PGN_FILE = "../data_chess/LumbrasGigaBase_OTB_2020-2024.pgn"
+    extract_all_fens_from_pgn(INPUT_PGN_FILE, "100000_data.csv")
