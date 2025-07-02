@@ -9,11 +9,11 @@ from opensloth.scripts.opensloth_sft_trainer import run_mp_training, setup_envs
 # 2 GPUs with packing configuration
 GLOBAL_BZ = 32
 
-DEVICES = [0, 1, 2, 3]
+DEVICES = [0]
 
 BZ = 1  # if sequence packing, then should be 1, larger does not contribute to speed
 opensloth_config = OpenSlothConfig(
-    data_cache_path="data/cache_qwen3_dataset/",
+    data_cache_path="data",
     devices=DEVICES,
     fast_model_args=FastModelArgs(
         model_name="unsloth/Llama-3.2-3B-Instruct",
