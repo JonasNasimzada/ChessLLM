@@ -65,7 +65,9 @@ trainer = SFTTrainer(
         seed=3407,  # Sets a fixed seed for reproducibility
         output_dir="outputs",  # Directory where fine-tuned model checkpoints will be saved
         max_seq_length=max_seq_length,
-        dataset_num_proc=2
+        dataset_num_proc=2,
+        use_liger_kernel=True,
+        report_to="wandb"
     ),
 )
 
