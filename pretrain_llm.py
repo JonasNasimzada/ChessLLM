@@ -28,6 +28,12 @@ if __name__ == "__main__":
 
     model_id = "openlm-research/open_llama_3b_v2"
 
+    base_model = AutoModelForCausalLM.from_pretrained(
+        "openlm-research/open_llama_3b_v2",
+        device_map="auto",
+        torch_dtype=torch.float16,
+    )
+
     device_string = PartialState().process_index
 
     # BitsAndBytesConfig int-4 config
@@ -98,14 +104,14 @@ if __name__ == "__main__":
         peft_config=peft_config,
         processing_class=tokenizer,
     )
-
-    trainer.train(resume_from_checkpoint=True)
-
-    trainer.save_model()
-    args.distributed_state.wait_for_everyone()
-    full_model = trainer.model.merge_and_unload()
-    full_model.save_pretrained("pretrained_chess_llm_full")
-    trainer.push_to_hub()
+    trainer.train_dataset.save_to_disk("data/Llama-3.2-3B-Instruct")
+    # trainer.train(resume_from_checkpoint=True, )
+    #
+    # trainer.save_model()
+    # args.distributed_state.wait_for_everyone()
+    # full_model = trainer.model.merge_and_unload()
+    # full_model.save_pretrained("pretrained_chess_llm_full")
+    # trainer.push_to_hub()
     # save model
 
     # Merge LoRA weights into the base model and save the full merged model
