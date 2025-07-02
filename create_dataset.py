@@ -19,7 +19,7 @@ def instruction_format(sample):
 
 if __name__ == "__main__":
     # dataset = load_dataset("./trainings_data/", split="train")
-    dataset = load_dataset("csv", data_files="2500_grpo.csv", split="train")
+    dataset = load_dataset("csv", data_files="100000_data.csv", split="train")
     ds = dataset.sort(["game_index", "ply_index"])
 
     contexts = []
@@ -56,5 +56,5 @@ if __name__ == "__main__":
     dataset = dataset.train_test_split(train_size=0.9, test_size=0.1)
 
     # save datasets to disk
-    dataset["train"].to_json("./grpo_data/train_grpo_15_dataset.json", orient="records")
-    dataset["test"].to_json("./grpo_data/test_grpo_15_dataset.json", orient="records")
+    dataset["train"].to_json("./data/train_15_dataset.json", orient="records")
+    dataset["test"].to_json("./data/test_15_dataset.json", orient="records")
