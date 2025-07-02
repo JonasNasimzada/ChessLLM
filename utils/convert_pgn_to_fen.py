@@ -24,7 +24,7 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str) -> None:
 
         game_index = 0
         i = 0
-        while i < 100000:  # Arbitrary large number to prevent infinite loop
+        while i < 1000000:  # Arbitrary large number to prevent infinite loop
             game = chess.pgn.read_game(pgn_file)
             if game is None:
                 break

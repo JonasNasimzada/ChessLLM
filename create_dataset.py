@@ -15,7 +15,7 @@ user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is 
 
 def instruction_format(sample):
     return {
-        "prompt": [
+        "messages": [
             {"role": "system", "content": system_message},
             {"role": "user", "content": user_message.format(past_moves=sample["context"], current_move=sample["fen"])},
             # {"role": "user", "content": user_message_no_context.format(current_move=sample["fen"])},
