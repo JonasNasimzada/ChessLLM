@@ -133,7 +133,7 @@ def train_from_large_csv(csv_file: str,
 # ----------------------------------------------------------------------
 
 if __name__ == "__main__":
-    csv_file = "LumbrasGigaBase 2024.csv"
+    csv_file = "100000_data.csv"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     from policyNetwork import SimpleTransformer
