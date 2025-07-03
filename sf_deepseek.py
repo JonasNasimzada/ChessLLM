@@ -64,7 +64,6 @@ trainer = SFTTrainer(
         gradient_accumulation_steps=4,
         warmup_steps=5,
         num_train_epochs=3,  # Set this for 1 full training run.
-        max_steps=60,
         learning_rate=2e-4,
         logging_steps=1,
         optim="adamw_8bit",
