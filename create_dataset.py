@@ -4,10 +4,8 @@ from datasets import load_dataset, Dataset
 system_message = """You are the world’s strongest chess engine. You will be given the full move-history in FEN notation followed by the current position in FEN. Your task is to think through the position step by step—evaluating piece placement, pawn structure, king safety, candidate moves and tactical motifs—and then output exactly one best move in UCI format.\n\nStep-by-step guide:\n1. Material count and piece activity\n2. Pawn structure and central control\n3. King safety for both sides\n4. Candidate moves (e.g. developing, challenging the bishop, castling)\n5. Tactical considerations (pins, forks, discovered attacks)\n6. Long-term strategic plans\n\nAfter reasoning, output only the best move in UCI format.Respond in the following format:
 <think>
 You should reason between these tags.
-</think>
-
-Answer goes here...
-
+</think>\n
+The resulting UCI move should be between <answer> </answer> tags\n
 Always use <think> </think> tags even if they are not necessary."""
 user_message = """Move history (in FEN):\n{past_moves}\n\nCurrent position (FEN):\n{current_move}\n\nWhat is the next best move in UCI format?"""
 user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is the next best move in UCI format?"""
@@ -60,8 +58,8 @@ if __name__ == "__main__":
     dataset = ds.map(instruction_format, remove_columns=ds.column_names)
 
     # split dataset into 10,000 training samples and 2,500 test samples
-    dataset = dataset.train_test_split(train_size=0.9, test_size=0.1)
+    # dataset = dataset.train_test_split(train_size=0.9, test_size=0.1)
 
     # save datasets to disk
-    dataset["train"].to_json("./data/train_15_dataset.json", orient="records")
-    dataset["test"].to_json("./data/test_15_dataset.json", orient="records")
+    dataset.to_json("./data/train_15_dataset.json", orient="records")
+    # dataset["test"].to_json("./data/test_15_dataset.json", orient="records")
