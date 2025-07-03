@@ -13,7 +13,7 @@ DEVICES = [0]
 
 BZ = 1  # if sequence packing, then should be 1, larger does not contribute to speed
 opensloth_config = OpenSlothConfig(
-    data_cache_path="data",
+    data_cache_path="data/cache_Llama-3.2-3B-Instruct",
     devices=DEVICES,
     fast_model_args=FastModelArgs(
         model_name="unsloth/Llama-3.2-3B-Instruct",

@@ -20,8 +20,6 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     load_in_4bit=load_in_4bit,
     # token = "hf_...", # use one if using gated models like meta-llama/Llama-2-7b-hf
 )
-dataset = load_dataset("data")
-EOS_TOKEN = tokenizer.eos_token  # Define EOS_TOKEN which the model when to stop generating text during training
 
 model = FastLanguageModel.get_peft_model(
     model,
@@ -43,6 +41,19 @@ tokenizer = get_chat_template(
     chat_template="llama-3.1",
 )
 
+
+def formatting_prompts_func(examples):
+    convos = examples["messages"]
+    texts = [tokenizer.apply_chat_template(convo, tokenize=False, add_generation_prompt=False) for convo in convos]
+    return {"text": texts, }
+
+
+dataset = load_dataset("data", split="train")
+dataset = dataset.map(formatting_prompts_func, batched=True, )
+
+print(dataset[5]["messages"])
+print(dataset[5]["text"])
+
 trainer = SFTTrainer(
     model=model,
     processing_class=tokenizer,
@@ -52,7 +63,7 @@ trainer = SFTTrainer(
         per_device_train_batch_size=2,
         gradient_accumulation_steps=4,
         warmup_steps=5,
-        num_train_epochs=3,  # Set this for 1 full training run.
+        # num_train_epochs = 1, # Set this for 1 full training run.
         max_steps=60,
         learning_rate=2e-4,
         logging_steps=1,
@@ -61,17 +72,21 @@ trainer = SFTTrainer(
         lr_scheduler_type="linear",
         seed=3407,
         output_dir="outputs",
-        report_to="wandb",
+        report_to="none",  # Use this for WandB etc
+        dataset_text_field="text",
         max_seq_length=max_seq_length,
-        packing=False,
         dataset_num_proc=2,
-
+        packing=False,
     ),
 )
-
 trainer = train_on_responses_only(
     trainer,
     instruction_part="<|start_header_id|>user<|end_header_id|>\n\n",
     response_part="<|start_header_id|>assistant<|end_header_id|>\n\n",
 )
-trainer_stats = trainer.train()
+
+print(tokenizer.decode(trainer.train_dataset[5]["input_ids"]))
+
+space = tokenizer(" ", add_special_tokens=False).input_ids[0]
+print(tokenizer.decode([space if x == -100 else x for x in trainer.train_dataset[5]["labels"]]))
+trainer.train_dataset.save_to_disk("data/cache_Llama-3.2-3B-Instruct")
