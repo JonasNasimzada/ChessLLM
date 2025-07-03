@@ -24,14 +24,16 @@ class LinearNetwork(nn.Module):
 class SimpleTransformer(nn.Module):  # try pretrained transformer
     def __init__(self):
         super().__init__()
-        self.encoder_layer = nn.TransformerEncoderLayer(d_model=960, nhead=8, batch_first=True).to(device)
-        self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=6).to(device)
-        self.fc = nn.Linear(960, 1).to(device)
+        self.encoder_layer = nn.TransformerEncoderLayer(d_model=960, nhead=8, batch_first=True)
+        self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=6)
+        self.fc = nn.Linear(960, 128)
 
     def forward(self, state_move):
+        if state_move.dim() == 2:
+            state_move = state_move.unsqueeze(1)  # (B,1,960)
         x = self.transformer_encoder(state_move)
-        x = self.fc(x)
-        return x
+        x = x.squeeze(1)  # (B,960)
+        return self.fc(x)
 
     def calculate_scores(self, state_vec, legal_moves):
         state_vec = state_vec.to(device)  # shape: (832,) if your move-encoding is 128
