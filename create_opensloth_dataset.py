@@ -1,8 +1,8 @@
 # Modules for fine-tuning
 # Hugging Face modules
-from datasets import load_dataset  # Lets you load fine-tuning datasets
-from trl import SFTTrainer, SFTConfig  # Trainer for supervised fine-tuning (SFT)
 from unsloth import FastLanguageModel
+from trl import SFTTrainer, SFTConfig  # Trainer for supervised fine-tuning (SFT)
+from datasets import load_dataset  # Lets you load fine-tuning datasets
 from unsloth import is_bfloat16_supported  # Checks if the hardware supports bfloat16 precision
 from unsloth.chat_templates import get_chat_template
 from transformers import DataCollatorForSeq2Seq
@@ -48,7 +48,7 @@ def formatting_prompts_func(examples):
     return {"text": texts, }
 
 
-dataset = load_dataset("data", split="train")
+dataset = load_dataset("json", data_files="data/train_striped", split="train")
 dataset = dataset.map(formatting_prompts_func, batched=True, )
 
 print(dataset[5]["messages"])
