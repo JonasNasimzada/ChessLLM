@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import wandb
+from policyNetwork import SimpleTransformer
 
 #############################################
 # State and Action Encoding Functions
@@ -72,7 +73,8 @@ class PolicyNetwork(nn.Module):
 
 class RLAgent:
     def __init__(self, lr=1e-3):
-        self.policy_net = PolicyNetwork()
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.policy_net = SimpleTransformer().to(device)
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=lr)
         # These lists store the log probabilities for moves during the episode.
         self.episode_log_probs = []
@@ -92,6 +94,7 @@ class RLAgent:
         for move in legal_moves:
             move_vec = encode_move(move)  # shape: (128,)
             input_tensor = torch.cat([state_vec, move_vec])  # shape: (960,)
+            input_tensor = input_tensor.unsqueeze(0)
             score = self.policy_net(input_tensor)
             scores.append(score)
         scores_tensor = torch.stack(scores).view(-1)  # ensure one-dimensional tensor, shape: (n_moves,)
@@ -128,7 +131,8 @@ class RLAgent:
         self.optimizer.step()
 
         # grab scalar loss for logging
-        loss_value = self.cumulative_loss.item() if isinstance(self.cumulative_loss, torch.Tensor) else self.cumulative_loss
+        loss_value = self.cumulative_loss.item() if isinstance(self.cumulative_loss,
+                                                               torch.Tensor) else self.cumulative_loss
 
         # reset for next episode
         self.episode_log_probs = []
@@ -360,8 +364,8 @@ if __name__ == "__main__":
     #     rl_agent = RLAgent(lr=wandb.config.learning_rate)
     #     rl_agent.load_checkpoint(checkpoint_file)
     # else:
+    # rl_agent = RLAgent(lr=wandb.config.learning_rate)
     rl_agent = RLAgent(lr=wandb.config.learning_rate)
-
     # Track gradients & parameters
     wandb.watch(rl_agent.policy_net, log="all")
 
