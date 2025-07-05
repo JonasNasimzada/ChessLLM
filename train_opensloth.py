@@ -17,7 +17,7 @@ opensloth_config = OpenSlothConfig(
     dataset_text_field="text",
     devices=DEVICES,
     fast_model_args=FastModelArgs(
-        model_name="unsloth/DeepSeek-R1-Distill-Qwen-1.5B-GGUF",
+        model_name="unsloth/DeepSeek-R1-Distill-Qwen-1.5B",
         max_seq_length=2048,
         load_in_4bit=True,
     ),
