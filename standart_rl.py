@@ -20,6 +20,7 @@ piece_to_index = {
     'P': 1, 'N': 2, 'B': 3, 'R': 4, 'Q': 5, 'K': 6,
     'p': 7, 'n': 8, 'b': 9, 'r': 10, 'q': 11, 'k': 12
 }
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def encode_board(board):
@@ -73,7 +74,6 @@ class PolicyNetwork(nn.Module):
 
 class RLAgent:
     def __init__(self, lr=1e-3):
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.policy_net = SimpleTransformer().to(device)
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=lr)
         # These lists store the log probabilities for moves during the episode.
@@ -89,10 +89,11 @@ class RLAgent:
         Returns the chosen move.
         """
         state_vec = encode_board(board)  # shape: (832,)
+        state_vec = state_vec.to(device)
         legal_moves = list(board.legal_moves)
         scores = []
         for move in legal_moves:
-            move_vec = encode_move(move)  # shape: (128,)
+            move_vec = encode_move(move).to(device)  # shape: (128,)
             input_tensor = torch.cat([state_vec, move_vec])  # shape: (960,)
             input_tensor = input_tensor.unsqueeze(0)
             score = self.policy_net(input_tensor)
