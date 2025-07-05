@@ -161,8 +161,8 @@ if __name__ == "__main__":
     # rl_agent = rlAgent.PiecewiseAgent(network, optim.AdamW)
 
     opponent_agent = ClassicalAgent(depth=3)  # Classical Agent for Black.
-    stockfish_path = "stockfish_path"  # Path to your Stockfish binary.
-    opponent_agent = StockfishAgent(stockfish_path=stockfish_path)  # Classical Agent for Black.
+    # stockfish_path = "stockfish_path"  # Path to your Stockfish binary.
+    # opponent_agent = StockfishAgent(stockfish_path=stockfish_path)  # Classical Agent for Black.
 
     # checkpoint_file = "policy_checkpoint.pth"
     # if os.path.exists(checkpoint_file):
