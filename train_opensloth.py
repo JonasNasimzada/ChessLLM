@@ -17,7 +17,7 @@ opensloth_config = OpenSlothConfig(
     dataset_text_field="text",
     devices=DEVICES,
     fast_model_args=FastModelArgs(
-        model_name="unsloth/Llama-3.2-3B-Instruct",
+        model_name="unsloth/DeepSeek-R1-Distill-Qwen-1.5B-GGUF",
         max_seq_length=2048,
         load_in_4bit=True,
     ),
@@ -41,8 +41,8 @@ opensloth_config = OpenSlothConfig(
 )
 
 training_config = TrainingArguments(
-    output_dir="outputs/exps/Llama-3.2-3B-Instruct",
-    resume_from_checkpoint="outputs/exps/Llama-3.2-3B-Instruct",
+    output_dir="outputs/exps/DeepSeek-R1-Distill-Qwen-1.5B-GGUF",
+    resume_from_checkpoint="outputs/exps/DeepSeek-R1-Distill-Qwen-1.5B-GGUF",
     save_only_model=False,
     max_steps=60,
     per_device_train_batch_size=BZ,
