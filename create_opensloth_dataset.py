@@ -89,4 +89,8 @@ print(tokenizer.decode(trainer.train_dataset[5]["input_ids"]))
 
 space = tokenizer(" ", add_special_tokens=False).input_ids[0]
 print(tokenizer.decode([space if x == -100 else x for x in trainer.train_dataset[5]["labels"]]))
-trainer.train_dataset.save_to_disk("data/cache_Llama-3.2-3B-Instruct")
+trainer_stats = trainer.train()
+model.save_pretrained("Llama-3.2-3B-Instruct_unsloth")  # Local saving
+tokenizer.save_pretrained("Llama-3.2-3B-Instruct_unsloth")
+model.push_to_hub("Llama-3.2-3B-Instruct" )  # Online saving
+tokenizer.push_to_hub("Llama-3.2-3B-Instruct")  # Online saving
