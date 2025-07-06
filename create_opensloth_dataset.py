@@ -7,17 +7,20 @@ from unsloth import is_bfloat16_supported  # Checks if the hardware supports bfl
 from unsloth.chat_templates import get_chat_template
 from transformers import DataCollatorForSeq2Seq
 from unsloth.chat_templates import train_on_responses_only
+from accelerate import PartialState
+
 
 max_seq_length = 2048  # Define the maximum sequence length a model can handle (i.e. how many tokens can be processed at once)
 dtype = None  # Set to default
 load_in_4bit = True  # Enables 4 bit quantization — a memory saving optimization
-
+device_string = PartialState().process_index
 # Load the DeepSeek R1 model and tokenizer using unsloth — imported using: from unsloth import FastLanguageModel
 model, tokenizer = FastLanguageModel.from_pretrained(
     model_name="unsloth/Llama-3.2-3B-Instruct",  # or choose "unsloth/Llama-3.2-1B-Instruct"
     max_seq_length=max_seq_length,
     dtype=dtype,
     load_in_4bit=load_in_4bit,
+    device_map={'' : device_string},  # Use this to set the device for the model
     # token = "hf_...", # use one if using gated models like meta-llama/Llama-2-7b-hf
 )
 
