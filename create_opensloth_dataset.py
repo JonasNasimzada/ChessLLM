@@ -80,6 +80,7 @@ trainer = SFTTrainer(
         max_seq_length=max_seq_length,
         dataset_num_proc=2,
         packing=False,
+        ddp_find_unused_parameters=False,  # Set to False for better performance
     ),
 )
 trainer = train_on_responses_only(
