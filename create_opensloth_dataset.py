@@ -63,16 +63,16 @@ trainer = SFTTrainer(
         per_device_train_batch_size=2,
         gradient_accumulation_steps=4,
         warmup_steps=5,
-        # num_train_epochs = 1, # Set this for 1 full training run.
-        max_steps=60,
+        num_train_epochs=1,  # Set this for 1 full training run.
+        # max_steps=60,
         learning_rate=2e-4,
         logging_steps=1,
         optim="adamw_8bit",
         weight_decay=0.01,
         lr_scheduler_type="linear",
         seed=3407,
-        output_dir="outputs",
-        report_to="none",  # Use this for WandB etc
+        output_dir="outputs_unsloth",
+        report_to="wandb",  # Use this for WandB etc
         dataset_text_field="text",
         max_seq_length=max_seq_length,
         dataset_num_proc=2,
@@ -92,5 +92,5 @@ print(tokenizer.decode([space if x == -100 else x for x in trainer.train_dataset
 trainer_stats = trainer.train()
 model.save_pretrained("Llama-3.2-3B-Instruct_unsloth")  # Local saving
 tokenizer.save_pretrained("Llama-3.2-3B-Instruct_unsloth")
-model.push_to_hub("Llama-3.2-3B-Instruct" )  # Online saving
+model.push_to_hub("Llama-3.2-3B-Instruct")  # Online saving
 tokenizer.push_to_hub("Llama-3.2-3B-Instruct")  # Online saving
