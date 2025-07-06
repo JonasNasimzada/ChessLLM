@@ -48,7 +48,7 @@ def formatting_prompts_func(examples):
     return {"text": texts, }
 
 
-dataset = load_dataset("json", data_files="data/train_striped", split="train")
+dataset = load_dataset("json", data_files="data/train_striped_7.json", split="train")
 dataset = dataset.map(formatting_prompts_func, batched=True, )
 
 print(dataset[5]["messages"])
@@ -63,7 +63,7 @@ trainer = SFTTrainer(
         per_device_train_batch_size=2,
         gradient_accumulation_steps=4,
         warmup_steps=5,
-        num_train_epochs=1,  # Set this for 1 full training run.
+        num_train_epochs=3,  # Set this for 1 full training run.
         # max_steps=60,
         learning_rate=2e-4,
         logging_steps=1,
