@@ -51,7 +51,7 @@ def formatting_prompts_func(examples):
     return {"text": texts, }
 
 
-dataset = load_dataset("json", data_files="data/train_striped_7.json", split="train")
+dataset = load_dataset("json", data_files="data/train_striped", split="train")
 dataset = dataset.map(formatting_prompts_func, batched=True, )
 
 print(dataset[5]["messages"])
