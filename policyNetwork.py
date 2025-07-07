@@ -26,7 +26,7 @@ class SimpleTransformer(nn.Module):  # try pretrained transformer
         super().__init__()
         self.encoder_layer = nn.TransformerEncoderLayer(d_model=960, nhead=8, batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=6)
-        self.fc = nn.Linear(960, 1)
+        self.fc = nn.Linear(960, 128)
 
     def forward(self, state_move):
         if state_move.dim() == 2:
