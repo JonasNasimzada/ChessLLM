@@ -13,7 +13,7 @@ from utils.encoding import encode_board, encode_move
 # Configuration & W&B Initialization
 # ----------------------------------------------------------------------
 
-CHECKPOINT_DIR = Path("checkpoints/pretrain_transformer")
+CHECKPOINT_DIR = Path("checkpoints/pretrain_transformer/v2")
 CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Initialize a new W&B run
