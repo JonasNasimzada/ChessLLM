@@ -1,8 +1,4 @@
-"""
-Train a policy network on a very large CSV of <FEN, move> pairs.
-The file is streamed in chunks to keep RAM usage under control.
-"""
-
+import wandb
 from pathlib import Path
 import pandas as pd
 import torch
@@ -14,11 +10,24 @@ from tqdm import tqdm
 from utils.encoding import encode_board, encode_move
 
 # ----------------------------------------------------------------------
-# Configuration
+# Configuration & W&B Initialization
 # ----------------------------------------------------------------------
 
 CHECKPOINT_DIR = Path("checkpoints/pretrain_transformer")
-CHECKPOINT_DIR.mkdir(exist_ok=True)
+CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
+
+# Initialize a new W&B run
+wandb.init(
+    project="chess_policy_pretrain",  # replace with your project name
+    config={
+        "batch_size": 256,
+        "chunksize": 10_000,
+        "epochs": 50,
+        "lr": 1e-4,
+        "model": "SimpleTransformer"
+    }
+)
+config = wandb.config
 
 
 # ----------------------------------------------------------------------
@@ -40,26 +49,22 @@ class ChessDataset(Dataset):
 
     def __getitem__(self, idx):
         fen = self.df.iloc[idx]["fen"]
-        san = self.df.iloc[idx]["move"]
+        uci = self.df.iloc[idx]["move"]
         board = chess.Board(fen)
 
-        # Ignore rows with malformed SAN moves
         try:
-            move_obj = board.parse_san(san)
+            move_obj = chess.Move.from_uci(uci)
         except ValueError:
             return None, None
 
-        # Input vector: board encoding + 128 zeros = 960‑dim
         board_vec = encode_board(board)  # (832,)
         zeros_128 = torch.zeros(128)  # (128,)
         x = torch.cat([board_vec, zeros_128])  # (960,)
-        # Target index 0‥127  (class label for CrossEntropyLoss)
         y = encode_move(move_obj).argmax()  # scalar tensor
         return x, y
 
 
 def collate_fn(batch):
-    """Remove invalid samples and return `None` if an entire batch is invalid."""
     batch = [item for item in batch if item[0] is not None]
     if not batch:
         return None
@@ -68,21 +73,24 @@ def collate_fn(batch):
 
 
 # ----------------------------------------------------------------------
-# Training helpers
+# Training helpers with W&B logging
 # ----------------------------------------------------------------------
 
 def train_one_chunk(model: nn.Module,
                     dataloader: DataLoader,
                     optimizer: torch.optim.Optimizer,
                     loss_fn: nn.Module,
-                    device: torch.device) -> float:
+                    device: torch.device,
+                    epoch: int,
+                    chunk_no: int) -> float:
     """Train on a single DataLoader chunk and return the average loss."""
     model.train()
     total_loss = 0.0
+    count = 0
 
-    for batch in tqdm(dataloader, desc="Training", leave=False):
+    for batch_idx, batch in enumerate(tqdm(dataloader, desc="Training", leave=False), start=1):
         if batch is None:
-            continue  # entire batch was invalid
+            continue
 
         xb, yb = batch
         xb, yb = xb.to(device), yb.to(device)
@@ -94,8 +102,24 @@ def train_one_chunk(model: nn.Module,
         optimizer.step()
 
         total_loss += loss.item() * xb.size(0)
+        count += xb.size(0)
 
-    return total_loss / len(dataloader.dataset) if len(dataloader.dataset) else 0.0
+        # Log batch-level loss
+        wandb.log({
+            "batch_loss": loss.item(),
+            "epoch": epoch,
+            "chunk": chunk_no,
+            "batch_idx": batch_idx
+        })
+
+    avg_loss = total_loss / count if count else 0.0
+    # Log chunk-level average loss
+    wandb.log({
+        "chunk_avg_loss": avg_loss,
+        "epoch": epoch,
+        "chunk": chunk_no
+    })
+    return avg_loss
 
 
 def train_from_large_csv(csv_file: str,
@@ -103,12 +127,17 @@ def train_from_large_csv(csv_file: str,
                          optimizer: torch.optim.Optimizer,
                          loss_fn: nn.Module,
                          device: torch.device,
-                         batch_size: int = 128,
-                         chunksize: int = 10_000,
-                         epochs: int = 1) -> None:
+                         batch_size: int = None,
+                         chunksize: int = None,
+                         epochs: int = None) -> None:
     """Stream a CSV file in manageable chunks and train the model."""
-    for epoch in range(epochs):
-        print(f"Epoch {epoch + 1}/{epochs}")
+    # Update config to W&B
+    batch_size = batch_size or config.batch_size
+    chunksize = chunksize or config.chunksize
+    epochs = epochs or config.epochs
+
+    for epoch in range(1, epochs + 1):
+        print(f"Epoch {epoch}/{epochs}")
         for chunk_no, chunk in enumerate(pd.read_csv(csv_file, chunksize=chunksize), start=1):
             print(f"\nChunk {chunk_no}: {len(chunk)} rows")
             ds = ChessDataset(chunk)
@@ -120,12 +149,21 @@ def train_from_large_csv(csv_file: str,
                 collate_fn=collate_fn,
             )
 
-            avg_loss = train_one_chunk(model, dl, optimizer, loss_fn, device)
+            avg_loss = train_one_chunk(model, dl, optimizer, loss_fn, device, epoch, chunk_no)
             print(f"Chunk {chunk_no} completed — average loss: {avg_loss:.4f}")
 
+            # Save checkpoint and log as artifact
             ckpt_path = CHECKPOINT_DIR / f"epoch{epoch}_chunk{chunk_no}.pt"
             torch.save(model.state_dict(), ckpt_path)
-        print(f"Epoch {epoch + 1} completed.\n")
+            artifact = wandb.Artifact(
+                name=f"model-epoch{epoch}-chunk{chunk_no}",
+                type="model"
+            )
+            artifact.add_file(str(ckpt_path))
+            wandb.log_artifact(artifact)
+
+        print(f"Epoch {epoch} completed.\n")
+        # Optionally, you can log epoch summary metrics here
 
 
 # ----------------------------------------------------------------------
@@ -138,8 +176,8 @@ if __name__ == "__main__":
 
     from policyNetwork import SimpleTransformer
 
-    model = SimpleTransformer().to(device)  # 960‑in, 1‑out
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    model = SimpleTransformer().to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
     loss_fn = nn.CrossEntropyLoss()
 
     train_from_large_csv(
@@ -148,9 +186,14 @@ if __name__ == "__main__":
         optimizer=optimizer,
         loss_fn=loss_fn,
         device=device,
-        batch_size=256,  # decrease if GPU memory is limited
-        chunksize=10_000,  # decrease if system RAM is limited
-        epochs=1,
+        batch_size=config.batch_size,
+        chunksize=config.chunksize,
+        epochs=config.epochs,
     )
     # final save
-    torch.save(model.state_dict(), CHECKPOINT_DIR / "best.pt")
+    final_path = CHECKPOINT_DIR / "best.pt"
+    torch.save(model.state_dict(), final_path)
+    wandb.save(str(final_path))
+
+    # Finish the run
+    wandb.finish()
