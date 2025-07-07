@@ -369,7 +369,7 @@ if __name__ == "__main__":
     # rl_agent = RLAgent(lr=wandb.config.learning_rate)
     rl_agent = RLAgent(lr=wandb.config.learning_rate)
     rl_agent.load_checkpoint("checkpoints/pretrain_transformer/epoch99_chunk99.pt")
-    rl_agent.policy_net.fc = nn.Linear(960, 1)
+    rl_agent.policy_net.fc = nn.Linear(960, 1).to(device)
 
     # Track gradients & parameters
     wandb.watch(rl_agent.policy_net, log="all")
