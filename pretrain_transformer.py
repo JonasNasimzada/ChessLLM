@@ -152,15 +152,10 @@ def train_from_large_csv(csv_file: str,
             avg_loss = train_one_chunk(model, dl, optimizer, loss_fn, device, epoch, chunk_no)
             print(f"Chunk {chunk_no} completed — average loss: {avg_loss:.4f}")
 
+        if epoch % 20 == 0:
             # Save checkpoint and log as artifact
-            ckpt_path = CHECKPOINT_DIR / f"epoch{epoch}_chunk{chunk_no}.pt"
+            ckpt_path = CHECKPOINT_DIR / f"epoch{epoch}.pt"
             torch.save(model.state_dict(), ckpt_path)
-            artifact = wandb.Artifact(
-                name=f"model-epoch{epoch}-chunk{chunk_no}",
-                type="model"
-            )
-            artifact.add_file(str(ckpt_path))
-            wandb.log_artifact(artifact)
 
         print(f"Epoch {epoch} completed.\n")
         # Optionally, you can log epoch summary metrics here
