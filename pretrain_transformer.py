@@ -21,8 +21,8 @@ wandb.init(
     project="chess_policy_pretrain",  # replace with your project name
     config={
         "batch_size": 256,
-        "chunksize": 10_000,
-        "epochs": 50,
+        "chunksize": 15_000,
+        "epochs": 1000,
         "lr": 1e-4,
         "model": "SimpleTransformer"
     }
