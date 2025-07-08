@@ -93,7 +93,7 @@ print(tokenizer.decode(trainer.train_dataset[5]["input_ids"]))
 
 space = tokenizer(" ", add_special_tokens=False).input_ids[0]
 print(tokenizer.decode([space if x == -100 else x for x in trainer.train_dataset[5]["labels"]]))
-trainer_stats = trainer.train(resume_from_checkpoint=True)
+trainer_stats = trainer.train(resume_from_checkpoint="outputs_unsloth/checkpoint-75000")
 model.save_pretrained("Llama-3.2-3B-Instruct_unsloth")  # Local saving
 tokenizer.save_pretrained("Llama-3.2-3B-Instruct_unsloth")
 model.push_to_hub("Llama-3.2-3B-Instruct")  # Online saving
