@@ -10,7 +10,7 @@ from trl import GRPOConfig, GRPOTrainer
 from utils import encoding
 
 FEN_REGEX = r'^\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s([K|Q|k|q]{1,4})\s(-|[a-h][1-8])\s(\d+\s\d+)$'
-UCI_REGEX = r'[a-h][1-8][a-h][1-8][nbrq]?'
+UCI_REGEX = r'\b([a-h][1-8][a-h][1-8][nbrq]?)\b'
 
 
 def isolate_fen_notation(prompt):
@@ -101,7 +101,6 @@ def valid_uci_move_reward(prompts, completions, **kwargs):
 def check_answer(prompts, completions, answer, **kwargs):
     question = prompts[0][-1]["content"]
     responses = [completion[0]["content"] for completion in completions]
-    print(responses[0])
     extracted_responses = [
         guess.group(1)
         if (guess := re.compile(UCI_REGEX).search(r)) is not None else None for r in responses
