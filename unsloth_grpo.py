@@ -64,6 +64,10 @@ def end_game_reward(prompts, completions, **kwargs):
                     rewards.append(10.0)
                 else:
                     rewards.append(-10.0)
+            else:
+                rewards.append(-10.0)
+        else:
+            rewards.append(-1.0)
     return rewards
 
 
