@@ -165,6 +165,9 @@ def train_from_large_csv(csv_file: str,
 # Entry point
 # ----------------------------------------------------------------------
 
+
+
+
 if __name__ == "__main__":
     csv_file = "100000_data.csv"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -172,6 +175,8 @@ if __name__ == "__main__":
     from policyNetwork import SimpleTransformer
 
     model = SimpleTransformer().to(device)
+
+    model = LinearLayer(model).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
     loss_fn = nn.CrossEntropyLoss()
 
