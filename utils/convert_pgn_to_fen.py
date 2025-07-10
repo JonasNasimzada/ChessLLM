@@ -24,7 +24,7 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str) -> None:
 
         game_index = 0
         i = 0
-        while i < 1000000:  # Arbitrary large number to prevent infinite loop
+        while i < 10000:  # Arbitrary large number to prevent infinite loop
             game = chess.pgn.read_game(pgn_file)
             if game is None:
                 break
@@ -45,7 +45,8 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str) -> None:
 
                 # Write one line per half-move
                 writer.writerow([game_index, ply_index, uci, fen])
-            i += 1
+                i += 1
+
 
     print(f"Done! Wrote every ply’s UCI and FEN to: {csv_path}")
 

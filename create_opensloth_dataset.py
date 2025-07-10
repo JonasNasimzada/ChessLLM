@@ -9,7 +9,6 @@ from transformers import DataCollatorForSeq2Seq
 from unsloth.chat_templates import train_on_responses_only
 from accelerate import PartialState
 
-
 max_seq_length = 2048  # Define the maximum sequence length a model can handle (i.e. how many tokens can be processed at once)
 dtype = None  # Set to default
 load_in_4bit = True  # Enables 4 bit quantization — a memory saving optimization
@@ -20,7 +19,7 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     max_seq_length=max_seq_length,
     dtype=dtype,
     load_in_4bit=load_in_4bit,
-    device_map={'' : device_string},  # Use this to set the device for the model
+    device_map={'': device_string},  # Use this to set the device for the model
     # token = "hf_...", # use one if using gated models like meta-llama/Llama-2-7b-hf
 )
 
@@ -93,7 +92,7 @@ print(tokenizer.decode(trainer.train_dataset[5]["input_ids"]))
 
 space = tokenizer(" ", add_special_tokens=False).input_ids[0]
 print(tokenizer.decode([space if x == -100 else x for x in trainer.train_dataset[5]["labels"]]))
-trainer_stats = trainer.train(resume_from_checkpoint="outputs_unsloth/checkpoint-75000")
+trainer_stats = trainer.train()
 model.save_pretrained("Llama-3.2-3B-Instruct_unsloth")  # Local saving
 tokenizer.save_pretrained("Llama-3.2-3B-Instruct_unsloth")
 model.push_to_hub("Llama-3.2-3B-Instruct")  # Online saving
