@@ -73,7 +73,7 @@ class PolicyNetwork(nn.Module):
 #############################################
 
 class RLAgent:
-    def __init__(self, lr=1e-3, rl_model=SimpleTransformer.to(device)):
+    def __init__(self, lr=1e-3, rl_model=SimpleTransformer):
         self.policy_net = rl_model
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=lr)
         # These lists store the log probabilities for moves during the episode.
