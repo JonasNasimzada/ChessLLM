@@ -144,7 +144,7 @@ if __name__ == "__main__":
         loftq_config=None,  # And LoftQ
     )
 
-    dataset = load_dataset("json", "/grpo_data/train_15_dataset.json", split="train")
+    dataset = load_dataset("json", data_files="/grpo_data/train_15_dataset.json", split="train")
 
     max_prompt_length = max(dataset.map(
         lambda x: {"tokens": tokenizer.apply_chat_template(x["prompt"], add_generation_prompt=True, tokenize=True)},
