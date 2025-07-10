@@ -40,6 +40,9 @@ def end_game_reward(prompts, completions, **kwargs):
     rewards = []
     for prompt, completion in zip(prompts, completions):
         fen = isolate_fen_notation(prompt)
+        print(prompt)
+        print(completion)
+        print(fen)
         chess_board = chess.Board(fen)
         board_turn = chess_board.turn
         move_str = isolate_move_notation(completion)
