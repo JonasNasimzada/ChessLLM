@@ -9,27 +9,36 @@ from trl import GRPOConfig, GRPOTrainer
 
 from utils import encoding
 
-FEN_REGEX = r'^\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s([K|Q|k|q]{1,4})\s(-|[a-h][1-8])\s(\d+\s\d+)$'
+FEN_REGEX = (
+    r'^\s*'
+    r'('
+    r'(?:[rnbqkpRNBQKP1-8]+\/){7}[rnbqkpRNBQKP1-8]+'  # board part
+    r'\s[bw]'  # side
+    r'\s(?:[KQkq]{1,4}|-)'  # castling
+    r'\s(?:-|[a-h][1-8])'  # en passant
+    r'\s\d+\s\d+'  # move counters
+    r')'
+    r'\s*$'
+)
 UCI_REGEX = r'\b([a-h][1-8][a-h][1-8][nbrq]?)\b'
 
 
 def isolate_fen_notation(prompt):
     user_prompt = prompt[1]["content"]
-    search = re.findall(FEN_REGEX, user_prompt)
+    pattern = re.compile(FEN_REGEX, re.MULTILINE)
+    search = pattern.findall(user_prompt)
     if search:
-        print("found fen")
-        fen = search[-1]
+        fen = search[-1][0]
+        print(f"found fen: {fen}")
         return fen
     else:
         return None
 
 
 def isolate_move_notation(response):
-    print(response)
     response = response[0]["content"]
     search = re.search(UCI_REGEX, response)
     if search:
-        print("found uci")
         uci = search.group(1)
         return uci
     else:
