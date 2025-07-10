@@ -141,7 +141,7 @@ if __name__ == "__main__":
         random_state=3407,
     )
 
-    dataset = load_dataset("openai/gsm8k", "main", split="train")
+    dataset = load_dataset("json", "/grpo_data/train_15_dataset.json", split="train")
 
     max_prompt_length = max(dataset.map(
         lambda x: {"tokens": tokenizer.apply_chat_template(x["prompt"], add_generation_prompt=True, tokenize=True)},
