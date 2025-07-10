@@ -245,8 +245,6 @@ piece_unicode = {
     'p': '♟', 'n': '♞', 'b': '♝', 'r': '♜', 'q': '♛', 'k': '♚'
 }
 
-# Instantiate the RL agent (Transformer for White).
-rl_agent = RLAgent()
 
 
 class ChessApp(tk.Tk):
