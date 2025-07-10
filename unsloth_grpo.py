@@ -9,7 +9,7 @@ from trl import GRPOConfig, GRPOTrainer
 
 from utils import encoding
 
-FEN_REGEX = '^\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s([K|Q|k|q]{1,4})\s(-|[a-h][1-8])\s(\d+\s\d+)$'
+FEN_REGEX = r'^\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s([K|Q|k|q]{1,4})\s(-|[a-h][1-8])\s(\d+\s\d+)$'
 UCI_REGEX = r'[a-h][1-8][a-h][1-8][nbrq]?'
 
 
