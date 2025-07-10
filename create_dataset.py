@@ -24,7 +24,7 @@ def instruction_format(sample):
 
 if __name__ == "__main__":
     # dataset = load_dataset("./trainings_data/", split="train")
-    dataset = load_dataset("csv", data_files="trainings_data/train/test1.csv", split="train")
+    dataset = load_dataset("csv", data_files="grpo_data/grpo_Data.csv", split="train")
     ds = dataset.sort(["game_index", "ply_index"])
 
     contexts = []
