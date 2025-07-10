@@ -108,11 +108,12 @@ def check_answer(prompts, completions, answer, **kwargs):
     scores = []
     for guess, true_answer in zip(extracted_responses, answer):
         if guess is None:
-            scores.append(-1)
+            scores.append(-2)
             continue
-        # Correct answer gets 3 points!
         if guess == true_answer:
             scores.append(2)
+        else:
+            scores.append(-1)
     return scores
 
 
