@@ -61,5 +61,5 @@ if __name__ == "__main__":
     # dataset = dataset.train_test_split(train_size=0.9, test_size=0.1)
 
     # save datasets to disk
-    dataset.to_json("./data/train_15_dataset.json", orient="records")
+    dataset.to_json("./grpo_data/train_15_dataset.json", orient="records")
     # dataset["test"].to_json("./data/test_15_dataset.json", orient="records")
