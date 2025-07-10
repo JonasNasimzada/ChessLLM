@@ -293,7 +293,7 @@ class ChessApp(tk.Tk):
                 self.canvas.create_rectangle(x1, y1, x2, y2, outline="lime", width=3)
 
     def game_loop(self):
-        checkpoint_file = "policy_checkpoint_Transformer.pth"
+        checkpoint_file = "policy_checkpoint_Transformer_pretrained.pth"
         while self.game_count < 1000:
             self.board.reset()
             self.last_move = None

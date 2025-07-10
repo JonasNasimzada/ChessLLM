@@ -176,7 +176,6 @@ if __name__ == "__main__":
 
     model = SimpleTransformer().to(device)
 
-    model = LinearLayer(model).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
     loss_fn = nn.CrossEntropyLoss()
 
