@@ -25,11 +25,10 @@ UCI_REGEX = r'\b([a-h][1-8][a-h][1-8][nbrq]?)\b'
 
 def isolate_fen_notation(prompt):
     user_prompt = prompt[1]["content"]
-    print(user_prompt)
     pattern = re.compile(FEN_REGEX, re.MULTILINE)
     search = pattern.findall(user_prompt)
     if search:
-        fen = search[-1][0]
+        fen = search[-1]
         print(f"found fen: {fen}")
         return fen
     else:
