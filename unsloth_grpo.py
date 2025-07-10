@@ -101,6 +101,7 @@ def valid_uci_move_reward(prompts, completions, **kwargs):
 def check_answer(prompts, completions, answer, **kwargs):
     question = prompts[0][-1]["content"]
     responses = [completion[0]["content"] for completion in completions]
+    print(responses[0])
     extracted_responses = [
         guess.group(1)
         if (guess := re.compile(UCI_REGEX).search(r)) is not None else None for r in responses
