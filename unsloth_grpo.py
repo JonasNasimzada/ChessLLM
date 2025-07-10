@@ -57,7 +57,7 @@ def end_game_reward(prompts, completions, **kwargs):
         move = chess.Move.from_uci(move_str)
         try:
             chess_board.push(move)
-        except ValueError:
+        except AssertionError:
             rewards.append(-5.0)
             continue
         if chess_board.outcome():
@@ -187,7 +187,7 @@ if __name__ == "__main__":
         max_grad_norm=1.0,
         report_to="wandb",  # Can use Weights & Biases
         output_dir="outputs_unsloth/grpo",
-        num_completions_to_print=2,
+        num_completions_to_print=1,
         log_completions=True,
     )
     trainer = GRPOTrainer(
