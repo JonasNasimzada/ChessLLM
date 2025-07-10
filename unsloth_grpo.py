@@ -29,7 +29,6 @@ def isolate_fen_notation(prompt):
     search = pattern.findall(user_prompt)
     if search:
         fen = search[-1]
-        print(f"found fen: {fen}")
         return fen
     else:
         return None
@@ -56,7 +55,11 @@ def end_game_reward(prompts, completions, **kwargs):
             rewards.append(-5.0)
             continue
         move = chess.Move.from_uci(move_str)
-        chess_board.push(move)
+        try:
+            chess_board.push(move)
+        except ValueError:
+            rewards.append(-5.0)
+            continue
         if chess_board.outcome():
             outcome = chess_board.outcome()
             if outcome.winner is not None:
