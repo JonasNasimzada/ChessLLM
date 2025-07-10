@@ -167,6 +167,8 @@ if __name__ == "__main__":
         max_grad_norm=1.0,
         report_to="wandb",  # Can use Weights & Biases
         output_dir="outputs_unsloth/grpo",
+        num_completions_to_print=2,
+        log_completions=True,
     )
     trainer = GRPOTrainer(
         model=model,
