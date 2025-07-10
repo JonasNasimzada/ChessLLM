@@ -25,6 +25,7 @@ UCI_REGEX = r'\b([a-h][1-8][a-h][1-8][nbrq]?)\b'
 
 def isolate_fen_notation(prompt):
     user_prompt = prompt[1]["content"]
+    print(user_prompt)
     pattern = re.compile(FEN_REGEX, re.MULTILINE)
     search = pattern.findall(user_prompt)
     if search:
@@ -49,12 +50,6 @@ def end_game_reward(prompts, completions, **kwargs):
     rewards = []
     for prompt, completion in zip(prompts, completions):
         fen = isolate_fen_notation(prompt)
-        print("prompt")
-        print(prompt)
-        print("completion")
-        print(completion)
-        print("fen")
-        print(fen)
         chess_board = chess.Board(fen)
         board_turn = chess_board.turn
         move_str = isolate_move_notation(completion)
