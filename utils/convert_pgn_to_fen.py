@@ -61,4 +61,4 @@ if __name__ == "__main__":
     #                                       os.path.join(dirpath, file.replace(".pgn", ".csv")))
 
     INPUT_PGN_FILE = "../data_chess/LumbrasGigaBase_OTB_2020-2024.pgn"
-    extract_all_fens_from_pgn(INPUT_PGN_FILE, "100000_data.csv")
+    extract_all_fens_from_pgn(INPUT_PGN_FILE, "grpo_data/grpo_Data.csv")
