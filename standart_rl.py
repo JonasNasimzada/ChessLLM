@@ -73,8 +73,8 @@ class PolicyNetwork(nn.Module):
 #############################################
 
 class RLAgent:
-    def __init__(self, lr=1e-3):
-        self.policy_net = SimpleTransformer().to(device)
+    def __init__(self, lr=1e-3, rl_model=SimpleTransformer.to(device)):
+        self.policy_net = rl_model
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=lr)
         # These lists store the log probabilities for moves during the episode.
         self.episode_log_probs = []
@@ -349,6 +349,17 @@ class ChessApp(tk.Tk):
             rl_agent.save_checkpoint(filename=checkpoint_file)
 
 
+class LinearLayer(nn.Module):  # try pretrained transformer
+    def __init__(self, pretrained_model):
+        super().__init__()
+        self.model = pretrained_model
+        self.fc1 = nn.Linear(128, 1)
+
+    def forward(self, x):
+        x = self.model(x)
+        return self.fc1(x)
+
+
 if __name__ == "__main__":
     wandb.init(
         project="chess-rl",
@@ -367,9 +378,11 @@ if __name__ == "__main__":
     # else:
     # rl_agent = RLAgent(lr=wandb.config.learning_rate)
     # rl_agent = RLAgent(lr=wandb.config.learning_rate)
-    rl_agent = RLAgent(lr=wandb.config.learning_rate)
-    rl_agent.load_checkpoint("checkpoints/pretrain_transformer/epoch99_chunk99.pt")
-    rl_agent.policy_net.fc = nn.Linear(960, 1).to(device)
+
+    model = SimpleTransformer().to(device)
+    model.load_state_dict(torch.load("checkpoints/pretrain_transformer/v2/epoch680.pt",))
+    model = LinearLayer(model).to(device)
+    rl_agent = RLAgent(lr=wandb.config.learning_rate, rl_model=model)
 
     # Track gradients & parameters
     wandb.watch(rl_agent.policy_net, log="all")
