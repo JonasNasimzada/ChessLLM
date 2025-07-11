@@ -136,6 +136,7 @@ def check_answer(prompts, completions, answer, **kwargs):
 
 if __name__ == "__main__":
     envs.VLLM_HOST_IP = "127.0.0.1"
+    envs.VLLM_PORT = "37973"
     max_seq_length = 2048  # Can increase for longer reasoning traces
     lora_rank = 64  # Larger rank = smarter, but slower
 
