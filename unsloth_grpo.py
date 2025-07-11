@@ -6,6 +6,7 @@ from unsloth import FastLanguageModel
 import torch
 from datasets import load_dataset
 from trl import GRPOConfig, GRPOTrainer
+import vllm.envs as envs
 
 from utils import encoding
 
@@ -134,6 +135,7 @@ def check_answer(prompts, completions, answer, **kwargs):
 
 
 if __name__ == "__main__":
+    envs.VLLM_HOST_IP = "127.0.0.1"
     max_seq_length = 2048  # Can increase for longer reasoning traces
     lora_rank = 64  # Larger rank = smarter, but slower
 
