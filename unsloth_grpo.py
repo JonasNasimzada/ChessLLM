@@ -87,7 +87,11 @@ def piece_reward(prompts, completions, **kwargs):
             rewards.append(-1.0)
             continue
         move = chess.Move.from_uci(move_str)
-        chess_board.push(move)
+        try:
+            chess_board.push(move)
+        except AssertionError:
+            rewards.append(-5.0)
+            continue
         lost, captured = encoding.evaluate_board_difference_score(old_board, chess_board)
         lost_count = -abs(sum(encoding.piece_reward[piece] for piece in lost) + 1)
         captured_count = sum(encoding.piece_reward[piece] for piece in captured)
@@ -147,7 +151,7 @@ if __name__ == "__main__":
         fast_inference=True,  # Enable vLLM fast inference
         max_lora_rank=lora_rank,
         gpu_memory_utilization=0.6,  # Reduce if out of memory
-        #device_map={'': device_string},
+        # device_map={'': device_string},
         device_map='auto',
 
     )
