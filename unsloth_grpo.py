@@ -138,7 +138,6 @@ def check_answer(prompts, completions, answer, **kwargs):
 if __name__ == "__main__":
     max_seq_length = 2048  # Can increase for longer reasoning traces
     lora_rank = 64  # Larger rank = smarter, but slower
-    torch.distributed.barrier()
     device_string = PartialState().process_index
 
     model, tokenizer = FastLanguageModel.from_pretrained(
