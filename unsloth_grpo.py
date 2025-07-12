@@ -176,10 +176,10 @@ if __name__ == "__main__":
     print(f"Max completion length: {max_seq_length - max_prompt_length}")
 
     training_args = GRPOConfig(
-        use_vllm=True,
-        vllm_mode="colocate",
-        vllm_gpu_memory_utilization=0.25,
-        vllm_tensor_parallel_size=2,
+        # use_vllm=True,
+        # vllm_mode="colocate",
+        # vllm_gpu_memory_utilization=0.25,
+        # vllm_tensor_parallel_size=2,
         learning_rate=5e-6,
         weight_decay=0.1,
         warmup_ratio=0.1,
