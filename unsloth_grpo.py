@@ -147,7 +147,8 @@ if __name__ == "__main__":
         fast_inference=True,  # Enable vLLM fast inference
         max_lora_rank=lora_rank,
         gpu_memory_utilization=0.6,  # Reduce if out of memory
-        device_map={'': device_string}
+        device_map={'': device_string},
+
     )
 
     # model = FastLanguageModel.get_peft_model(
@@ -170,11 +171,13 @@ if __name__ == "__main__":
     max_prompt_length = max(dataset.map(
         lambda x: {"tokens": tokenizer.apply_chat_template(x["prompt"], add_generation_prompt=True, tokenize=True)},
         batched=True, ).map(lambda x: {"length": len(x["tokens"])})["length"]) + 1
+    print(f"Max prompt length: {max_prompt_length}")
+    print(f"Max completion length: {max_seq_length - max_prompt_length}")
 
     training_args = GRPOConfig(
         use_vllm=True,
         vllm_mode="colocate",
-        vllm_gpu_memory_utilization=0.20,
+        vllm_gpu_memory_utilization=0.25,
         vllm_tensor_parallel_size=2,
         learning_rate=5e-6,
         weight_decay=0.1,
@@ -190,8 +193,6 @@ if __name__ == "__main__":
         num_train_epochs=3,  # Set to 1 for a full training run
         save_steps=250,
         max_grad_norm=1.0,
-        gradient_checkpointing_kwargs=dict(reentrant=True),  # Set to True if you want to use CPU for training
-
         report_to="wandb",  # Can use Weights & Biases
         output_dir="outputs_unsloth/grpo",
         num_completions_to_print=1,
