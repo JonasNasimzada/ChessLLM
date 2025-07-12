@@ -7,6 +7,7 @@ import torch
 from datasets import load_dataset
 from trl import GRPOConfig, GRPOTrainer
 import vllm.envs as envs
+from accelerate import PartialState
 
 from utils import encoding
 
@@ -135,10 +136,10 @@ def check_answer(prompts, completions, answer, **kwargs):
 
 
 if __name__ == "__main__":
-    envs.VLLM_HOST_IP = "0.0.0.0"
-    envs.VLLM_PORT = 37973
     max_seq_length = 2048  # Can increase for longer reasoning traces
     lora_rank = 64  # Larger rank = smarter, but slower
+
+    device_string = PartialState().process_index
 
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name="JonasNasimzada/Llama-3.2-3B-Instruct",
@@ -147,6 +148,7 @@ if __name__ == "__main__":
         fast_inference=True,  # Enable vLLM fast inference
         max_lora_rank=lora_rank,
         gpu_memory_utilization=0.6,  # Reduce if out of memory
+        device_map={'': device_string}
     )
 
     model = FastLanguageModel.get_peft_model(
@@ -174,6 +176,7 @@ if __name__ == "__main__":
         use_vllm=True,
         vllm_mode="colocate",
         vllm_gpu_memory_utilization=0.20,
+        vllm_tensor_parallel_size=2,
         learning_rate=5e-6,
         weight_decay=0.1,
         warmup_ratio=0.1,
