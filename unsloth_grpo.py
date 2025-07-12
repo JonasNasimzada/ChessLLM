@@ -147,7 +147,8 @@ if __name__ == "__main__":
         fast_inference=True,  # Enable vLLM fast inference
         max_lora_rank=lora_rank,
         gpu_memory_utilization=0.6,  # Reduce if out of memory
-        device_map={'': device_string},
+        #device_map={'': device_string},
+        device_map='auto',
 
     )
 
