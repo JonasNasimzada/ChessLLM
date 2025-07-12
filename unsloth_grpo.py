@@ -174,7 +174,7 @@ if __name__ == "__main__":
     training_args = GRPOConfig(
         use_vllm=True,
         vllm_mode="colocate",
-        vllm_gpu_memory_utilization=0.20,
+        vllm_gpu_memory_utilization=0.48,
         vllm_tensor_parallel_size=2,
         learning_rate=5e-6,
         weight_decay=0.1,
