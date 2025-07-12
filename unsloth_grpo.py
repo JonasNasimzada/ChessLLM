@@ -174,7 +174,7 @@ if __name__ == "__main__":
     training_args = GRPOConfig(
         use_vllm=True,
         vllm_mode="colocate",
-        vllm_gpu_memory_utilization=0.48,
+        vllm_gpu_memory_utilization=0.20,
         vllm_tensor_parallel_size=2,
         learning_rate=5e-6,
         weight_decay=0.1,
@@ -190,10 +190,13 @@ if __name__ == "__main__":
         num_train_epochs=3,  # Set to 1 for a full training run
         save_steps=250,
         max_grad_norm=1.0,
+        gradient_checkpointing_kwargs=dict(reentrant=True),  # Set to True if you want to use CPU for training
+
         report_to="wandb",  # Can use Weights & Biases
         output_dir="outputs_unsloth/grpo",
         num_completions_to_print=1,
         log_completions=True,
+        wandb_log_unique_prompts=True
     )
     trainer = GRPOTrainer(
         model=model,
