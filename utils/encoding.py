@@ -1,3 +1,5 @@
+import re
+
 import chess
 import torch
 
@@ -105,3 +107,38 @@ def evaluate_board_difference_score(old_board, new_board):
         if new_white < old_white:
             lost.extend([piece_type for _ in range(old_white - new_white)])
     return lost, captured
+
+
+FEN_REGEX = (
+    r'^\s*'
+    r'('
+    r'(?:[rnbqkpRNBQKP1-8]+\/){7}[rnbqkpRNBQKP1-8]+'  # board part
+    r'\s[bw]'  # side
+    r'\s(?:[KQkq]{1,4}|-)'  # castling
+    r'\s(?:-|[a-h][1-8])'  # en passant
+    r'\s\d+\s\d+'  # move counters
+    r')'
+    r'\s*$'
+)
+UCI_REGEX = r'\b([a-h][1-8][a-h][1-8][nbrq]?)\b'
+
+
+def isolate_fen_notation(prompt):
+    user_prompt = prompt[1]["content"]
+    pattern = re.compile(FEN_REGEX, re.MULTILINE)
+    search = pattern.findall(user_prompt)
+    if search:
+        fen = search[-1]
+        return fen
+    else:
+        return None
+
+
+def isolate_move_notation(response):
+    response = response[0]["content"]
+    search = re.search(UCI_REGEX, response)
+    if search:
+        uci = search.group(1)
+        return uci
+    else:
+        return None
