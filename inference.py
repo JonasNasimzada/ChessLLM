@@ -25,20 +25,30 @@ user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is 
 
 
 def stockfish_make_move(current_board):
-    stockfish_agent = Stockfish("../stockfish-ubuntu-x86-64-avx2",
-                                parameters={"Skill Level": 0, "Debug Log File": "./stockfish_debug.log", "Hash": 2048,
-                                            "Threads": 256})
-    fen = current_board.fen()
-    stockfish_agent.set_fen_position(fen)
-    move = stockfish_agent.get_best_move()
-    move = chess.Move.from_uci(move)
-    stockfish_agent._put("quit")
+    # fen = current_board.fen()
+    # stockfish_agent.set_fen_position(fen)
+    # move = stockfish_agent.get_best_move()
+    # move = chess.Move.from_uci(move)
 
-    # move = stockfish_agent.get_move(current_board, time_limit=1.0, ponder=True)
-    #
-    # if not move:
-    #     legal_moves = current_board.legal_moves
-    #     print("Stockfish could not find a move,legal moves are:", list(legal_moves))
+    if not current_board.is_valid():
+        old_move = current_board.pop()
+        print(current_board.is_checkmate(),
+              current_board.is_stalemate(),
+              current_board.is_check(),
+              current_board.is_into_check(),
+              current_board.is_variant_draw(),
+              current_board.outcome(),
+              current_board.can_claim_draw(),
+              current_board.can_claim_threefold_repetition(),
+              current_board.can_claim_fifty_moves(),
+              current_board.is_insufficient_material(),
+              current_board.is_fivefold_repetition(),
+              current_board.is_seventyfive_moves())
+
+    move = stockfish_agent.get_move(current_board, time_limit=1.0, ponder=True)
+
+    if not move:
+        old_move = current_board.pop()
 
     current_board.push(move)
 
@@ -125,6 +135,8 @@ if __name__ == "__main__":
         tokenizer,
         chat_template="llama-3.1"
     )
-
-    # stockfish_agent = StockfishAgent(stockfish_path="../stockfish-ubuntu-x86-64-avx2", config={"Skill Level": 0})
+    # stockfish_agent = Stockfish("stockfish-ubuntu-20.04-x86-64-avx2",
+    #                             parameters={"Skill Level": 20, "Debug Log File": "./stockfish_debug.log", "Hash": 2048,
+    #                                         "Threads": 256})
+    stockfish_agent = StockfishAgent(stockfish_path="../stockfish-ubuntu-x86-64-avx2", config={"Skill Level": 0})
     play_chess()
