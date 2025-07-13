@@ -381,7 +381,7 @@ if __name__ == "__main__":
 
     model = SimpleTransformer().to(device)
     model.load_state_dict(torch.load("policy_checkpoint_Transformer.pth",))
-    model = LinearLayer(model).to(device)
+    # model = LinearLayer(model).to(device)
     # model.load_state_dict(torch.load("policy_checkpoint_Transformer.pth", map_location=device))
     rl_agent = RLAgent(lr=wandb.config.learning_rate, rl_model=model)
 
