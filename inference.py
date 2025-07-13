@@ -36,6 +36,8 @@ def stockfish_make_move(current_board):
         except Exception:  # Increase time limit if Stockfish fails to generate a move
             print("Stockfish failed to generate a move, retrying...")
     # move = chess.Move.from_uci(result)
+    if not move:
+        return
     current_board.push(move)
 
 
