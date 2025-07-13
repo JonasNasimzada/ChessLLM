@@ -1,3 +1,4 @@
+import sys
 import tkinter as tk
 import chess
 import time
@@ -367,6 +368,7 @@ if __name__ == "__main__":
             "minimax_depth": 3
         }
     )
+    sys.stdout = open('policy_checkpoint_Transformer_pretrained.log', 'w')
 
     # Instantiate or load agent
     # checkpoint_file = "policy_checkpoint.pth"
@@ -389,3 +391,4 @@ if __name__ == "__main__":
     # Start GUI/training
     app = ChessApp()
     app.mainloop()
+    app.quit()
