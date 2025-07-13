@@ -28,8 +28,8 @@ def stockfish_make_move(current_board):
     # fen = current_board.fen()
     # stockfish_engine.set_fen_position(fen)
     # result = stockfish_engine.get_best_move()
-    result = stockfish_agent.get_move(current_board, time_limit=1.0)
-    move = chess.Move.from_uci(result)
+    move = stockfish_agent.get_move(current_board, time_limit=1.0)
+    # move = chess.Move.from_uci(result)
     current_board.push(move)
 
 
