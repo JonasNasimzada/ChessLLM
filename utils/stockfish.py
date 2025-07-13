@@ -16,6 +16,12 @@ class StockfishAgent:
         :param time_limit: Time limit for Stockfish to think (in seconds).
         :return: Best move as a chess.Move object.
         """
-        result = self.engine.play(board, Limit(time=time_limit), ponder=ponder,root_moves= board.legal_moves)
+        result = self.engine.play(board, Limit(time=time_limit), ponder=ponder, root_moves=board.legal_moves)
         print(result)
         return result.move
+
+    def close(self):
+        """
+        Close the Stockfish engine.
+        """
+        self.engine.quit()
