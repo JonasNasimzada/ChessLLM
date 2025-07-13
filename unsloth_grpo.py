@@ -211,7 +211,7 @@ if __name__ == "__main__":
         save_steps=250,
         max_grad_norm=1.0,
         report_to="wandb",  # Can use Weights & Biases
-        output_dir="outputs_unsloth/grpo/piece_reward",
+        output_dir="outputs_unsloth/grpo/",
         num_completions_to_print=1,
         log_completions=True,
         wandb_log_unique_prompts=True
@@ -221,7 +221,7 @@ if __name__ == "__main__":
         processing_class=tokenizer,
         reward_funcs=[
             check_answer,
-            #end_game_reward,
+            end_game_reward,
             piece_reward,
             valid_uci_move_reward,
         ],
@@ -229,7 +229,7 @@ if __name__ == "__main__":
         train_dataset=dataset,
     )
     trainer.train()
-    model.save_pretrained("llama_grpo_piece_reward")
-    tokenizer.save_pretrained("llama_grpo_piece_reward")
-    model.push_to_hub("llama_grpo_piece_reward")
-    tokenizer.push_to_hub("llama_grpo_piece_reward")
+    model.save_pretrained("llama_grpo")
+    tokenizer.save_pretrained("llama_grpo")
+    model.push_to_hub("llama_grpo")
+    tokenizer.push_to_hub("llama_grpo")
