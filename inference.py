@@ -162,19 +162,21 @@ def play_chess():
         print(
             f"Game {game_count} over: {result} with {amount_moves} moves. white: {white_agent}, black: {black_agent}"
         )
+        result_wandb = 0
         if result == "1-0":
+            result_wandb = 1
             total_white_wins += 1
         elif result == "0-1":
+            result_wandb = -1
             total_black_wins += 1
         else:
+            result_wandb = 0
             total_draws += 1
 
         # Log game results
         wandb.log({
-            "game_result": result,
+            "game_result": result_wandb,
             "total_moves": amount_moves,
-            "white_agent": white_agent,
-            "black_agent": black_agent
         })
     # Print summary statistics
     print(
