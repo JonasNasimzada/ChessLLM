@@ -246,7 +246,6 @@ piece_unicode = {
 }
 
 
-
 class ChessApp(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -291,8 +290,8 @@ class ChessApp(tk.Tk):
                 self.canvas.create_rectangle(x1, y1, x2, y2, outline="lime", width=3)
 
     def game_loop(self):
-        checkpoint_file = "policy_checkpoint_Transformer_pretrained.pth"
-        while self.game_count < 1000:
+        # checkpoint_file = "policy_checkpoint_Transformer_pretrained.pth"
+        while self.game_count < 100:
             self.board.reset()
             self.last_move = None
             self.game_count += 1
@@ -306,16 +305,16 @@ class ChessApp(tk.Tk):
             # Play one complete game.
             while not self.board.is_game_over():
                 if self.board.turn:  # RL (White)
-                    old_eval = evaluate_material(self.board)
+                    # old_eval = evaluate_material(self.board)
                     move = rl_agent.choose_move(self.board)
                     self.board.push(move)
-                    new_eval = evaluate_material(self.board)
-                    immediate_reward = new_eval - old_eval
+                    # new_eval = evaluate_material(self.board)
+                    # immediate_reward = new_eval - old_eval
 
                     # Accumulate and log immediate loss
-                    rl_agent.accumulate_immediate_loss(immediate_reward)
+                    # rl_agent.accumulate_immediate_loss(immediate_reward)
                     wandb.log({
-                        "immediate_reward": immediate_reward,
+                        # "immediate_reward": immediate_reward,
                         "move_number": len(rl_agent.episode_log_probs),
                         "episode": self.game_count
                     })
@@ -333,18 +332,19 @@ class ChessApp(tk.Tk):
                 final_reward = -10
 
             # Finalize episode, get loss for logging
-            episode_loss = rl_agent.finalize_episode(final_reward, weight=wandb.config.reward_weight)
+            # episode_loss = rl_agent.finalize_episode(final_reward, weight=wandb.config.reward_weight)
 
             # Log episode metrics
             wandb.log({
                 "episode": self.game_count,
-                "episode_loss": episode_loss,
+                # "episode_loss": episode_loss,
                 "final_reward": final_reward,
                 "result": result
             })
 
             print(f"Game {self.game_count} over: {result}")
-            rl_agent.save_checkpoint(filename=checkpoint_file)
+            # rl_agent.save_checkpoint(filename=checkpoint_file)
+        self.quit()
 
 
 class LinearLayer(nn.Module):  # try pretrained transformer
@@ -378,8 +378,9 @@ if __name__ == "__main__":
     # rl_agent = RLAgent(lr=wandb.config.learning_rate)
 
     model = SimpleTransformer().to(device)
-    model.load_state_dict(torch.load("checkpoints/pretrain_transformer/v2/epoch680.pt",))
+    # model.load_state_dict(torch.load("checkpoints/pretrain_transformer/v2/epoch680.pt",))
     model = LinearLayer(model).to(device)
+    model.load_state_dict(torch.load("policy_checkpoint_Transformer_pretrained.pth", map_location=device))
     rl_agent = RLAgent(lr=wandb.config.learning_rate, rl_model=model)
 
     # Track gradients & parameters
