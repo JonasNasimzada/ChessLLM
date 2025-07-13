@@ -22,12 +22,12 @@ user_message = """Move history (in FEN):\n{past_moves}\n\nCurrent position (FEN)
 user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is the next best move in UCI format?"""
 
 
-def stockfish_make_move(board):
-    fen = board.fen()
+def stockfish_make_move(current_board):
+    fen = current_board.fen()
     stockfish_engine.set_fen_position(fen)
     result = stockfish_engine.get_best_move()
     move = chess.Move.from_uci(result)
-    board.push(move)
+    current_board.push(move)
 
 
 def generate_move(prompt):
@@ -41,8 +41,8 @@ def generate_move(prompt):
     return move
 
 
-def rl_make_move(board, past_moves):
-    current_fen = board.fen()
+def rl_make_move(current_board, past_moves):
+    current_fen = current_board.fen()
     prompt = [
         {"role": "system", "content": system_message},
         {"role": "user", "content": user_message.format(
@@ -50,15 +50,15 @@ def rl_make_move(board, past_moves):
             current_move=current_fen)},
     ]
 
-    move_str = generate_move(model, tokenizer, prompt)
+    move_str = generate_move(prompt)
     while True:
         try:
             move = chess.Move.from_uci(move_str)
-            board.push(move)
-            past_moves.append(board.fen())
+            current_board.push(move)
+            past_moves.append(current_board.fen())
             break
         except chess.InvalidMoveError or ValueError:
-            move_str = generate_move(model, tokenizer, prompt)
+            move_str = generate_move(prompt)
 
 
 def play_chess():
@@ -79,20 +79,21 @@ def play_chess():
             amount_moves += 1
             if board.turn:  # White.
                 if is_rl_agent_white:
-                    rl_make_move(model, tokenizer, board, past_fen_moves)
+                    rl_make_move(board, past_fen_moves)
                     white_agent = "RL Agent"
                 else:
-                    stockfish_make_move(stockfish_engine, board)
+                    stockfish_make_move(board)
                     white_agent = "Stockfish Agent"
 
             else:  # Black.
                 if not is_rl_agent_white:
-                    rl_make_move(model, tokenizer, board, past_fen_moves)
+                    rl_make_move(board, past_fen_moves)
                     black_agent = "RL Agent"
                 else:
-                    stockfish_make_move(stockfish_engine, board)
+                    stockfish_make_move(board)
                     black_agent = "Stockfish Agent"
-        print(f"Game {game_count} over: {board.result()} with {amount_moves} moves. white: {white_agent}, black: {black_agent}")
+        print(
+            f"Game {game_count} over: {board.result()} with {amount_moves} moves. white: {white_agent}, black: {black_agent}")
 
         result = board.result()
 
