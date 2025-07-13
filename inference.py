@@ -3,7 +3,6 @@ import time
 from collections import deque
 import sys
 
-
 import chess
 import torch
 import wandb
@@ -78,7 +77,8 @@ def generate_move(prompt):
         max_new_tokens=1024,
         use_cache=True,
         temperature=1.5,
-        min_p=0.1
+        min_p=0.1,
+        pad_token_id=tokenizer.eos_token_id
     )
     move_str = tokenizer.decode(output[0], skip_special_tokens=True)
     move = isolate_move_notation(move_str)
