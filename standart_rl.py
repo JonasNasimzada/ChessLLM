@@ -368,7 +368,7 @@ if __name__ == "__main__":
             "minimax_depth": 3
         }
     )
-    sys.stdout = open('policy_checkpoint_Transformer_pretrained.log', 'w')
+    sys.stdout = open('policy_checkpoint_Transformer.log', 'w')
 
     # Instantiate or load agent
     # checkpoint_file = "policy_checkpoint.pth"
@@ -382,7 +382,7 @@ if __name__ == "__main__":
     model = SimpleTransformer().to(device)
     # model.load_state_dict(torch.load("checkpoints/pretrain_transformer/v2/epoch680.pt",))
     model = LinearLayer(model).to(device)
-    model.load_state_dict(torch.load("policy_checkpoint_Transformer_pretrained.pth", map_location=device))
+    model.load_state_dict(torch.load("policy_checkpoint_Transformer.pth", map_location=device))
     rl_agent = RLAgent(lr=wandb.config.learning_rate, rl_model=model)
 
     # Track gradients & parameters
