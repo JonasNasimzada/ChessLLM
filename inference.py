@@ -25,20 +25,12 @@ user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is 
 
 
 def stockfish_make_move(current_board):
+    set_moves_back = False
     if not current_board.is_valid():
-        old_move = current_board.pop()
-        print(current_board.is_checkmate(),
-              current_board.is_stalemate(),
-              current_board.is_check(),
-              current_board.is_into_check(old_move),
-              current_board.is_variant_draw(),
-              current_board.outcome(),
-              current_board.can_claim_draw(),
-              current_board.can_claim_threefold_repetition(),
-              current_board.can_claim_fifty_moves(),
-              current_board.is_insufficient_material(),
-              current_board.is_fivefold_repetition(),
-              current_board.is_seventyfive_moves())
+        current_board.pop()
+        current_board.pop()
+        set_moves_back = True
+
     fen = current_board.fen()
     stockfish_agent.set_fen_position(fen)
     move = stockfish_agent.get_best_move()
@@ -46,10 +38,8 @@ def stockfish_make_move(current_board):
 
     # move = stockfish_agent.get_move(current_board, time_limit=1.0, ponder=True)
 
-    if not move:
-        old_move = current_board.pop()
-
     current_board.push(move)
+    return set_moves_back
 
 
 def generate_move(prompt):
@@ -106,7 +96,9 @@ def play_chess():
                     rl_make_move(board, past_fen_moves)
                     white_agent = "RL Agent"
                 else:
-                    stockfish_make_move(board)
+                    set_back = stockfish_make_move(board)
+                    if set_back:
+                        amount_moves -= 2
                     white_agent = "Stockfish Agent"
 
             else:  # Black.
@@ -114,7 +106,9 @@ def play_chess():
                     rl_make_move(board, past_fen_moves)
                     black_agent = "RL Agent"
                 else:
-                    stockfish_make_move(board)
+                    set_back = stockfish_make_move(board)
+                    if set_back:
+                        amount_moves -= 2
                     black_agent = "Stockfish Agent"
         print(
             f"Game {game_count} over: {board.result()} with {amount_moves} moves. white: {white_agent}, black: {black_agent}")
@@ -134,8 +128,8 @@ if __name__ == "__main__":
         tokenizer,
         chat_template="llama-3.1"
     )
-    stockfish_agent = Stockfish("stockfish-ubuntu-20.04-x86-64-avx2",
-                                parameters={"Skill Level": 20, "Debug Log File": "./stockfish_debug.log", "Hash": 2048,
-                                            "Threads": 256})
+    stockfish_agent = Stockfish("../stockfish-ubuntu-x86-64-avx2",
+                                parameters={"Skill Level": 0, "Debug Log File": "./stockfish_debug.log", "Hash": 2048,
+                                            "Threads": 1})
     # stockfish_agent = StockfishAgent(stockfish_path="../stockfish-ubuntu-x86-64-avx2", config={"Skill Level": 0})
     play_chess()
