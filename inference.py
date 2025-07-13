@@ -64,7 +64,7 @@ def rl_make_move(board, past_moves):
 def play_chess(stockfish_engine):
     game_count = 0
     board = chess.Board()
-    while game_count < 101:
+    while game_count < 2:
         board.reset()
         game_count += 1
         amount_moves = 0
