@@ -45,7 +45,7 @@ def stockfish_make_move(current_board):
     #     fen = current_board.fen()
     #     print("Stockfish failed to generate a move, current FEN:", fen)
     current_board.push(move)
-    stockfish_engine.send_quit_command()
+    stockfish_engine._prepare_for_new_position()
 
 
 def generate_move(prompt):
