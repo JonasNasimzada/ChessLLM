@@ -1,4 +1,5 @@
 import random
+import time
 from collections import deque
 
 import chess
@@ -23,9 +24,10 @@ user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is 
 
 
 def stockfish_make_move(current_board):
+    time.sleep(1)
     fen = current_board.fen()
     stockfish_engine.set_fen_position(fen)
-    result = stockfish_engine.get_best_move(wtime=1000, btime=1000)
+    result = stockfish_engine.get_best_move()
     move = chess.Move.from_uci(result)
     current_board.push(move)
 
