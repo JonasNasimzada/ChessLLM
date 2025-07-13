@@ -25,7 +25,7 @@ user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is 
 def stockfish_make_move(current_board):
     fen = current_board.fen()
     stockfish_engine.set_fen_position(fen)
-    result = stockfish_engine.get_best_move()
+    result = stockfish_engine.get_best_move(wtime=1000, btime=1000)
     move = chess.Move.from_uci(result)
     current_board.push(move)
 
@@ -33,11 +33,11 @@ def stockfish_make_move(current_board):
 def generate_move(prompt):
     inputs = tokenizer.apply_chat_template(prompt, tokenize=True, add_generation_prompt=True, return_tensors="pt").to(
         DEVICE)
-    text_streamer = TextStreamer(tokenizer)
-    output = model.generate(input_ids=inputs, streamer=text_streamer, max_new_tokens=1024, use_cache=True,
+    output = model.generate(input_ids=inputs, streamer=tokenizer, max_new_tokens=1024, use_cache=True,
                             temperature=1.5, min_p=0.1)
     move_str = tokenizer.decode(output[0], skip_special_tokens=True)
     move = isolate_move_notation(move_str)
+    print("Generated move:", move)
     return move
 
 
@@ -60,6 +60,7 @@ def rl_make_move(current_board, past_moves):
             break
         except chess.InvalidMoveError or ValueError:
             move_str = generate_move(prompt)
+            print("Invalid move generated, retrying...")
 
 
 def play_chess():
