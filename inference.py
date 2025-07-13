@@ -10,6 +10,8 @@ from unsloth import FastLanguageModel
 from transformers import TextStreamer
 from unsloth.chat_templates import get_chat_template
 from stockfish import Stockfish
+
+from utils.classicalAgent import ClassicalAgent
 from utils.stockfish import StockfishAgent
 
 from utils.encoding import isolate_move_notation
@@ -17,19 +19,6 @@ from utils.encoding import isolate_move_notation
 sys.stdout = open('inference.log', 'w')
 # Initialize device
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-# WandB initialization
-wandb.init(
-    project="chess_engine_evaluation",
-    config={
-        "model_name": "JonasNasimzada/Llama-3.2-3B-Instruct",
-        "stockfish_skill": 0,
-        "stockfish_hash": 2048,
-        "stockfish_threads": 1,
-        "max_games": 100
-    }
-)
-config = wandb.config
 
 system_message = """You are the world’s strongest chess engine. You will be given the full move-history in FEN notation followed by the current position in FEN. Your task is to think through the position step by step—evaluating piece placement, pawn structure, king safety, candidate moves and tactical motifs—and then output exactly one best move in UCI format.\n\nStep-by-step guide:\n1. Material count and piece activity\n2. Pawn structure and central control\n3. King safety for both sides\n4. Candidate moves (e.g. developing, challenging the bishop, castling)\n5. Tactical considerations (pins, forks, discovered attacks)\n6. Long-term strategic plans\n\nAfter reasoning, output only the best move in UCI format.Respond in the following format:
 <think>
@@ -42,24 +31,27 @@ user_message = """Move history (in FEN):\n{past_moves}\n\nCurrent position (FEN)
 user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is the next best move in UCI format?"""
 
 
-def stockfish_make_move(current_board, past_fen_moves):
-    start_time = time.time()
+def engine_make_move(current_board, past_fen_moves, engine="stockfish"):
     set_moves_back = False
-    if not current_board.is_valid():
-        print("Invalid board state, resetting last two moves.")
-        for i in range(2):
-            current_board.pop()
-            past_fen_moves.pop()
-        set_moves_back = True
+    if engine == "stockfish":
+        if not current_board.is_valid():
+            print("Invalid board state, resetting last two moves.")
+            for i in range(2):
+                current_board.pop()
+                past_fen_moves.pop()
+            set_moves_back = True
 
-    fen = current_board.fen()
-    past_fen_moves.append(fen)
-    stockfish_agent.set_fen_position(fen)
-    move = stockfish_agent.get_best_move()
-    move = chess.Move.from_uci(move)
+        fen = current_board.fen()
+        past_fen_moves.append(fen)
+        stockfish_agent.set_fen_position(fen)
+        move = stockfish_agent.get_best_move()
+        move = chess.Move.from_uci(move)
+
+    elif engine == "minmax":
+        engine = ClassicalAgent(depth=3)
+        move = engine.get_move(board=current_board)
 
     current_board.push(move)
-
     return set_moves_back
 
 
@@ -116,7 +108,7 @@ def rl_make_move(current_board, past_moves):
     })
 
 
-def play_chess():
+def play_chess(engine="stockfish"):
     game_count = 0
     total_rl_wins = 0
     total_rl_draws = 0
@@ -136,15 +128,18 @@ def play_chess():
         wandb.log({"game_id": game_count})
 
         is_rl_agent_white = chess.WHITE if random.choice([True, False]) else chess.BLACK
-
+        retry_count = 0
         while not board.is_game_over():
             amount_moves += 1
+            if retry_count == 70:
+                print("Too many retries, resetting game.")
+                continue
             if board.turn:  # White's turn
                 if is_rl_agent_white:
                     rl_make_move(board, past_fen_moves)
                     white_agent = "RL Agent"
                 else:
-                    set_back = stockfish_make_move(board, past_fen_moves)
+                    set_back = engine_make_move(board, past_fen_moves, engine=engine)
                     if set_back:
                         amount_moves -= 2
                     white_agent = "Stockfish Agent"
@@ -154,7 +149,7 @@ def play_chess():
                     rl_make_move(board, past_fen_moves)
                     black_agent = "RL Agent"
                 else:
-                    set_back = stockfish_make_move(board, past_fen_moves)
+                    set_back = engine_make_move(board, past_fen_moves, engine=engine)
                     if set_back:
                         amount_moves -= 2
                     black_agent = "Stockfish Agent"
@@ -199,6 +194,26 @@ def play_chess():
 
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('engine', choices=['stockfish', 'minmax'], default='stockfish',)
+    args = parser.parse_args()
+
+    # WandB initialization
+    wandb.init(
+        project="chess_engine_evaluation",
+        config={
+            "model_name": "JonasNasimzada/Llama-3.2-3B-Instruct",
+            "stockfish_skill": 0,
+            "stockfish_hash": 2048,
+            "stockfish_threads": 1,
+            "max_games": 100,
+            "engine": args.engine,
+        }
+    )
+    config = wandb.config
+
     # Load model & tokenizer
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=config.model_name,
@@ -220,4 +235,4 @@ if __name__ == "__main__":
             "Threads": config.stockfish_threads,
         }
     )
-    play_chess()
+    play_chess(engine=args.engine)
