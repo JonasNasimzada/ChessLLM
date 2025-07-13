@@ -141,6 +141,7 @@ def play_chess(engine="stockfish"):
                 else:
                     set_back = engine_make_move(board, past_fen_moves, engine=engine)
                     if set_back:
+                        retry_count += 1
                         amount_moves -= 2
                     white_agent = "Stockfish Agent"
 
@@ -151,6 +152,7 @@ def play_chess(engine="stockfish"):
                 else:
                     set_back = engine_make_move(board, past_fen_moves, engine=engine)
                     if set_back:
+                        retry_count += 1
                         amount_moves -= 2
                     black_agent = "Stockfish Agent"
 
