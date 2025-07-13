@@ -45,6 +45,7 @@ training_config = TrainingArguments(
     output_dir="outputs/exps/Llama-3.2-3B-Instruct_NEW",
     resume_from_checkpoint="outputs/exps/Llama-3.2-3B-Instruct_NEW",
     save_only_model=False,
+    ignore_data_skip=True,
     # max_steps=60,
     per_device_train_batch_size=BZ,
     gradient_accumulation_steps=GLOBAL_BZ // (len(DEVICES) * BZ),

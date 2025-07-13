@@ -25,7 +25,7 @@ class SimpleTransformer(nn.Module):  # try pretrained transformer
     def __init__(self):
         super().__init__()
         self.head = nn.Linear(960, 128)
-        self.move_head = nn.Linear(128, 128)
+        #self.move_head = nn.Linear(128, 128)
         self.encoder_layer = nn.TransformerEncoderLayer(d_model=128, nhead=8, batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=6)
         self.fc1 = nn.Linear(128, 128)
@@ -34,7 +34,7 @@ class SimpleTransformer(nn.Module):  # try pretrained transformer
         if state_move.dim() == 2:
             state_move = state_move.unsqueeze(1)  # (B,1,960)
         x = self.head(state_move)  # (B,1,128)
-        x = self.move_head(x)
+        #x = self.move_head(x)
         x = self.transformer_encoder(x)
         x = x.squeeze(1)  # (B,960)
         return self.fc1(x)
