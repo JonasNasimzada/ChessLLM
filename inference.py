@@ -30,7 +30,7 @@ def stockfish_make_move(current_board):
         print(current_board.is_checkmate(),
               current_board.is_stalemate(),
               current_board.is_check(),
-              current_board.is_into_check(chess.Move.from_uci(old_move)),
+              current_board.is_into_check(old_move),
               current_board.is_variant_draw(),
               current_board.outcome(),
               current_board.can_claim_draw(),
