@@ -26,7 +26,8 @@ user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is 
 
 def stockfish_make_move(current_board):
     stockfish_agent = Stockfish("../stockfish-ubuntu-x86-64-avx2",
-                                parameters={"Skill Level": 0, "Debug Log File": "./stockfish_debug.log", "Hash": 2048})
+                                parameters={"Skill Level": 0, "Debug Log File": "./stockfish_debug.log", "Hash": 204,
+                                            "Threads": 1024})
     fen = current_board.fen()
     stockfish_agent.set_fen_position(fen)
     move = stockfish_agent.get_best_move()
@@ -124,7 +125,6 @@ if __name__ == "__main__":
         tokenizer,
         chat_template="llama-3.1"
     )
-
 
     # stockfish_agent = StockfishAgent(stockfish_path="../stockfish-ubuntu-x86-64-avx2", config={"Skill Level": 0})
     play_chess()
