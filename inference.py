@@ -28,6 +28,7 @@ def stockfish_make_move(current_board):
     move = stockfish_agent.get_move(current_board, time_limit=1.0, ponder=False)
 
     if not move:
+        print("Stockfish did not return a move, using fallback method.")
         stockfish = Stockfish("../stockfish-ubuntu-x86-64-avx2")
         stockfish.set_skill_level(0)
         stockfish.update_engine_parameters({"Hash": 2048})
