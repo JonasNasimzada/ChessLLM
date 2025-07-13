@@ -25,7 +25,7 @@ user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is 
 
 
 def stockfish_make_move(current_board):
-    move = stockfish_agent.get_move(current_board, time_limit=1.0, ponder=False)
+    move = stockfish_agent.get_move(current_board, time_limit=1.0, ponder=True)
 
     if not move:
         legal_moves = current_board.legal_moves
