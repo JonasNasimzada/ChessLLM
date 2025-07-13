@@ -155,6 +155,8 @@ def play_chess(engine="stockfish"):
                         retry_count += 1
                         amount_moves -= 2
                     black_agent = "Stockfish Agent"
+        if retry_count == 70:
+            continue
 
         result = board.result()
         print(
