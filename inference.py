@@ -44,6 +44,7 @@ def stockfish_make_move(current_board, past_fen_moves):
     start_time = time.time()
     set_moves_back = False
     if not current_board.is_valid():
+        print("Invalid board state, resetting last two moves.")
         for i in range(2):
             current_board.pop()
             past_fen_moves.pop()
