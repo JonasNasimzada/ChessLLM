@@ -67,7 +67,7 @@ def rl_make_move(current_board, past_moves):
             current_board.push(move)
             past_moves.append(current_board.fen())
             break
-        except chess.InvalidMoveError or ValueError:
+        except Exception:
             move_str = generate_move(prompt)
             print("Invalid move generated, retrying...")
 
