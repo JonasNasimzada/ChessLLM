@@ -118,9 +118,10 @@ def rl_make_move(current_board, past_moves):
 
 def play_chess():
     game_count = 0
-    total_white_wins = 0
-    total_black_wins = 0
-    total_draws = 0
+    total_rl_wins = 0
+    total_rl_draws = 0
+    total_rl_losses = 0
+
     board = chess.Board()
     while game_count < config.max_games:
         board.reset()
@@ -163,15 +164,19 @@ def play_chess():
             f"Game {game_count} over: {result} with {amount_moves} moves. white: {white_agent}, black: {black_agent}"
         )
         result_wandb = 0
-        if result == "1-0":
+
+        # Track RL agent wins
+        if (result == "1-0" and is_rl_agent_white) or (result == "0-1" and not is_rl_agent_white):
+            total_rl_wins += 1
             result_wandb = 1
-            total_white_wins += 1
-        elif result == "0-1":
-            result_wandb = -1
-            total_black_wins += 1
-        else:
+        # Track RL agent draws
+        if result == "1/2-1/2":
+            total_rl_draws += 1
             result_wandb = 0
-            total_draws += 1
+        # Track RL agent losses
+        if (result == "0-1" and is_rl_agent_white) or (result == "1-0" and not is_rl_agent_white):
+            total_rl_losses += 1
+            result_wandb = -1
 
         # Log game results
         wandb.log({
@@ -181,15 +186,15 @@ def play_chess():
     # Print summary statistics
     print(
         f"Finished {config.max_games} games: "
-        f"White wins: {total_white_wins}, "
-        f"Black wins: {total_black_wins}, "
-        f"Draws: {total_draws}"
+        f"RL wins: {total_rl_wins}, "
+        f"RL draws: {total_rl_draws}, "
+        f"RL losses: {total_rl_losses}"
     )
     # Log summary stats to WandB
     wandb.log({
-        "summary_white_wins": total_white_wins,
-        "summary_black_wins": total_black_wins,
-        "summary_draws": total_draws
+        "summary_rl_wins": total_rl_wins,
+        "summary_rl_draws": total_rl_draws,
+        "summary_rl_losses": total_rl_losses
     })
 
 
