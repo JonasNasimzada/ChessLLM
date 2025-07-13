@@ -25,26 +25,27 @@ user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is 
 
 
 def stockfish_make_move(current_board):
-    # fen = current_board.fen()
-    # stockfish_engine.set_fen_position(fen)
-    # result = stockfish_engine.get_best_move()
-    time_limit = 1.0  # seconds
+    fen = current_board.fen()
+    stockfish_engine.set_fen_position(fen)
+    result = stockfish_engine.get_best_move()
+    # time_limit = 1.0  # seconds
     # while True:
     #     try:
     #         move = stockfish_agent.get_move(current_board, time_limit=time_limit, ponder=False)
     #         break
     #     except Exception:  # Increase time limit if Stockfish fails to generate a move
     #         print("Stockfish failed to generate a move, retrying...")
-    # # move = chess.Move.from_uci(result)
+    move = chess.Move.from_uci(result)
     # if not move:
     #     game_over = current_board.is_variant_draw()
     #     print("Stockfish failed to generate a move, game over:", game_over)
     #     return
-    move = stockfish_agent.get_move(current_board, time_limit=time_limit, ponder=False)
-    if not move:
-        fen = current_board.fen()
-        print("Stockfish failed to generate a move, current FEN:", fen)
+    # move = stockfish_agent.get_move(current_board, time_limit=time_limit, ponder=False)
+    # if not move:
+    #     fen = current_board.fen()
+    #     print("Stockfish failed to generate a move, current FEN:", fen)
     current_board.push(move)
+    stockfish_engine.send_quit_command()
 
 
 def generate_move(prompt):
@@ -129,7 +130,8 @@ if __name__ == "__main__":
         tokenizer,
         chat_template="llama-3.1"
     )
-    # stockfish_engine = Stockfish("../stockfish-ubuntu-x86-64-avx2")
-    # stockfish_engine.set_skill_level(0)
-    stockfish_agent = StockfishAgent(stockfish_path="../stockfish-ubuntu-x86-64-avx2", config={"Skill Level": 0})
+    stockfish_engine = Stockfish("../stockfish-ubuntu-x86-64-avx2")
+    stockfish_engine.set_skill_level(0)
+    stockfish_engine.update_engine_parameters({"Hash": 2048})
+    # stockfish_agent = StockfishAgent(stockfish_path="../stockfish-ubuntu-x86-64-avx2", config={"Skill Level": 0})
     play_chess()
