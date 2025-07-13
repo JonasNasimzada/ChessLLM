@@ -33,7 +33,8 @@ def stockfish_make_move(current_board):
 def generate_move(prompt):
     inputs = tokenizer.apply_chat_template(prompt, tokenize=True, add_generation_prompt=True, return_tensors="pt").to(
         DEVICE)
-    output = model.generate(input_ids=inputs, streamer=tokenizer, max_new_tokens=1024, use_cache=True,
+    text_streamer = TextStreamer(tokenizer, skip_prompt=True)
+    output = model.generate(input_ids=inputs, streamer=text_streamer, max_new_tokens=1024, use_cache=True,
                             temperature=1.5, min_p=0.1)
     move_str = tokenizer.decode(output[0], skip_special_tokens=True)
     move = isolate_move_notation(move_str)
