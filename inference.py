@@ -1,6 +1,8 @@
 import random
 import time
 from collections import deque
+import sys
+
 
 import chess
 import torch
@@ -13,6 +15,7 @@ from utils.stockfish import StockfishAgent
 
 from utils.encoding import isolate_move_notation
 
+sys.stdout = open('inference.log', 'w')
 # Initialize device
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
