@@ -36,7 +36,7 @@ def generate_move(prompt):
     text_streamer = TextStreamer(tokenizer)
     output = model.generate(input_ids=inputs, streamer=text_streamer, max_new_tokens=1024, use_cache=True,
                             temperature=1.5, min_p=0.1)
-    move_str = tokenizer.decode(output, skip_special_tokens=True)
+    move_str = tokenizer.decode(output[0], skip_special_tokens=True)
     move = isolate_move_notation(move_str)
     return move
 

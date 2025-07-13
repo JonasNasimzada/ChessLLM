@@ -2,15 +2,13 @@ import copy
 import re
 
 import chess
-from unsloth import FastLanguageModel
-import torch
+from accelerate import PartialState
 from datasets import load_dataset
 from trl import GRPOConfig, GRPOTrainer
-import vllm.envs as envs
-from accelerate import PartialState
+from unsloth import FastLanguageModel
 
 from utils import encoding
-from utils.encoding import isolate_fen_notation, isolate_move_notation
+from utils.encoding import isolate_fen_notation, isolate_move_notation, UCI_REGEX
 
 
 def end_game_reward(prompts, completions, **kwargs):
