@@ -380,9 +380,9 @@ if __name__ == "__main__":
     # rl_agent = RLAgent(lr=wandb.config.learning_rate)
 
     model = SimpleTransformer().to(device)
-    # model.load_state_dict(torch.load("checkpoints/pretrain_transformer/v2/epoch680.pt",))
-    model = LinearLayer(model).to(device)
-    model.load_state_dict(torch.load("policy_checkpoint_Transformer.pth", map_location=device))
+    model.load_state_dict(torch.load("policy_checkpoint_Transformer.pth",))
+    # model = LinearLayer(model).to(device)
+    # model.load_state_dict(torch.load("policy_checkpoint_Transformer.pth", map_location=device))
     rl_agent = RLAgent(lr=wandb.config.learning_rate, rl_model=model)
 
     # Track gradients & parameters
