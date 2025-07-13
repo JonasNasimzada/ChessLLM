@@ -56,7 +56,11 @@ def end_game_reward(prompts, completions, **kwargs):
         if not move_str:
             rewards.append(-5.0)
             continue
-        move = chess.Move.from_uci(move_str)
+        try:
+            move = chess.Move.from_uci(move_str)
+        except chess.InvalidMoveError:
+            rewards.append(-5.0)
+            continue
         try:
             chess_board.push(move)
         except AssertionError:
@@ -86,7 +90,11 @@ def piece_reward(prompts, completions, **kwargs):
         if not move_str:
             rewards.append(-1.0)
             continue
-        move = chess.Move.from_uci(move_str)
+        try:
+            move = chess.Move.from_uci(move_str)
+        except chess.InvalidMoveError:
+            rewards.append(-5.0)
+            continue
         try:
             chess_board.push(move)
         except AssertionError:
@@ -110,7 +118,11 @@ def valid_uci_move_reward(prompts, completions, **kwargs):
             rewards.append(-1.0)
             continue
         try:
-            move = chess.Move.from_uci(move_str)
+            try:
+                move = chess.Move.from_uci(move_str)
+            except chess.InvalidMoveError:
+                rewards.append(-5.0)
+                continue
             if move in chess_board.legal_moves:
                 rewards.append(1.0)
             else:
@@ -199,7 +211,7 @@ if __name__ == "__main__":
         save_steps=250,
         max_grad_norm=1.0,
         report_to="wandb",  # Can use Weights & Biases
-        output_dir="outputs_unsloth/grpo",
+        output_dir="outputs_unsloth/grpo/piece_reward",
         num_completions_to_print=1,
         log_completions=True,
         wandb_log_unique_prompts=True
@@ -209,7 +221,7 @@ if __name__ == "__main__":
         processing_class=tokenizer,
         reward_funcs=[
             check_answer,
-            end_game_reward,
+            #end_game_reward,
             piece_reward,
             valid_uci_move_reward,
         ],
@@ -217,7 +229,7 @@ if __name__ == "__main__":
         train_dataset=dataset,
     )
     trainer.train()
-    model.save_pretrained("llama_grpo")
-    tokenizer.save_pretrained("llama_grpo")
-    model.push_to_hub("llama_grpo")
-    tokenizer.push_to_hub("llama_grpo")
+    model.save_pretrained("llama_grpo_piece_reward")
+    tokenizer.save_pretrained("llama_grpo_piece_reward")
+    model.push_to_hub("llama_grpo_piece_reward")
+    tokenizer.push_to_hub("llama_grpo_piece_reward")
