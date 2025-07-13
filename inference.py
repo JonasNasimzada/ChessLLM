@@ -31,10 +31,9 @@ def stockfish_make_move(current_board):
     time_limit = 1.0  # seconds
     while True:
         try:
-            move = stockfish_agent.get_move(current_board, time_limit=time_limit, ponder=True)
+            move = stockfish_agent.get_move(current_board, time_limit=time_limit, ponder=False)
             break
-        except Exception:
-            time_limit += 0.5  # Increase time limit if Stockfish fails to generate a move
+        except Exception:  # Increase time limit if Stockfish fails to generate a move
             print("Stockfish failed to generate a move, increasing time limit to", time_limit)
     # move = chess.Move.from_uci(result)
     current_board.push(move)
