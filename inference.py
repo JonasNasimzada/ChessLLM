@@ -25,11 +25,16 @@ user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is 
 
 
 def stockfish_make_move(current_board):
-    move = stockfish_agent.get_move(current_board, time_limit=1.0, ponder=True)
+    fen = current_board.fen()
+    stockfish_agent.set_fen_position(fen)
+    move = stockfish_agent.get_best_move()
+    move = chess.Move.from_uci(move)
 
-    if not move:
-        legal_moves = current_board.legal_moves
-        print("Stockfish could not find a move,legal moves are:", list(legal_moves))
+    # move = stockfish_agent.get_move(current_board, time_limit=1.0, ponder=True)
+    #
+    # if not move:
+    #     legal_moves = current_board.legal_moves
+    #     print("Stockfish could not find a move,legal moves are:", list(legal_moves))
 
     current_board.push(move)
 
@@ -116,6 +121,8 @@ if __name__ == "__main__":
         tokenizer,
         chat_template="llama-3.1"
     )
+    stockfish_agent = Stockfish("../stockfish-ubuntu-x86-64-avx2",
+                                parameters={"Skill Level": 0, "Debug Log File": "./stockfish_debug.log"})
 
-    stockfish_agent = StockfishAgent(stockfish_path="../stockfish-ubuntu-x86-64-avx2", config={"Skill Level": 0})
+    # stockfish_agent = StockfishAgent(stockfish_path="../stockfish-ubuntu-x86-64-avx2", config={"Skill Level": 0})
     play_chess()
