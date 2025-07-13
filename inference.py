@@ -61,7 +61,7 @@ def rl_make_move(board, past_moves):
             move_str = generate_move(model, tokenizer, prompt)
 
 
-def play_chess(stockfish_engine):
+def play_chess():
     game_count = 0
     board = chess.Board()
     while game_count < 2:
@@ -111,3 +111,4 @@ if __name__ == "__main__":
     )
     stockfish_engine = Stockfish("../stockfish-ubuntu-x86-64-avx2")
     stockfish_engine.set_skill_level(0)
+    play_chess()
