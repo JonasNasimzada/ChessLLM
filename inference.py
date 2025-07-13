@@ -46,7 +46,8 @@ def rl_make_move(current_board, past_moves):
     prompt = [
         {"role": "system", "content": system_message},
         {"role": "user", "content": user_message.format(
-            past_moves="\n".join("{}. {}".format(n, i) for n, i in enumerate(past_moves, start=1)),
+            past_moves="\n".join(
+                "{}. {}".format(n, i) for n, i in enumerate(past_moves, start=1)) if past_moves else "no past moves",
             current_move=current_fen)},
     ]
 

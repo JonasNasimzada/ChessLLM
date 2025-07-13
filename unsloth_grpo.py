@@ -19,7 +19,7 @@ def end_game_reward(prompts, completions, **kwargs):
         fen = isolate_fen_notation(prompt)
         chess_board = chess.Board(fen)
         board_turn = chess_board.turn
-        move_str = isolate_move_notation(completion)
+        move_str = isolate_move_notation(completion[0]["content"])
         if not move_str:
             rewards.append(-5.0)
             continue
@@ -53,7 +53,7 @@ def piece_reward(prompts, completions, **kwargs):
         fen = isolate_fen_notation(prompt)
         chess_board = chess.Board(fen)
         old_board = copy.deepcopy(chess_board)
-        move_str = isolate_move_notation(completion)
+        move_str = isolate_move_notation(completion[0]["content"])
         if not move_str:
             rewards.append(-1.0)
             continue
@@ -80,7 +80,7 @@ def valid_uci_move_reward(prompts, completions, **kwargs):
     for prompt, completion in zip(prompts, completions):
         fen = isolate_fen_notation(prompt)
         chess_board = chess.Board(fen)
-        move_str = isolate_move_notation(completion)
+        move_str = isolate_move_notation(completion[0]["content"])
         if not move_str:
             rewards.append(-1.0)
             continue
