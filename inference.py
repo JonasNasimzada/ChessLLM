@@ -31,6 +31,7 @@ def stockfish_make_move(current_board):
     stockfish_agent.set_fen_position(fen)
     move = stockfish_agent.get_best_move()
     move = chess.Move.from_uci(move)
+    stockfish_agent._put("quit")
 
     # move = stockfish_agent.get_move(current_board, time_limit=1.0, ponder=True)
     #
