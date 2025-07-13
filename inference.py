@@ -8,6 +8,7 @@ from unsloth import FastLanguageModel
 from transformers import TextStreamer
 from unsloth.chat_templates import get_chat_template
 from stockfish import Stockfish
+from utils.stockfish import StockfishAgent
 
 from utils.encoding import isolate_move_notation
 
@@ -24,10 +25,10 @@ user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is 
 
 
 def stockfish_make_move(current_board):
-    time.sleep(1)
-    fen = current_board.fen()
-    stockfish_engine.set_fen_position(fen)
-    result = stockfish_engine.get_best_move()
+    # fen = current_board.fen()
+    # stockfish_engine.set_fen_position(fen)
+    # result = stockfish_engine.get_best_move()
+    result = stockfish_agent.get_move(current_board, time_limit=1.0)
     move = chess.Move.from_uci(result)
     current_board.push(move)
 
@@ -40,7 +41,6 @@ def generate_move(prompt):
                             temperature=1.5, min_p=0.1)
     move_str = tokenizer.decode(output[0], skip_special_tokens=True)
     move = isolate_move_notation(move_str)
-    print("Generated move:", move)
     return move
 
 
@@ -115,6 +115,7 @@ if __name__ == "__main__":
         tokenizer,
         chat_template="llama-3.1"
     )
-    stockfish_engine = Stockfish("../stockfish-ubuntu-x86-64-avx2")
-    stockfish_engine.set_skill_level(0)
+    # stockfish_engine = Stockfish("../stockfish-ubuntu-x86-64-avx2")
+    # stockfish_engine.set_skill_level(0)
+    stockfish_agent = StockfishAgent(stockfish_path="../stockfish-ubuntu-x86-64-avx2", config={"Skill Level": 0})
     play_chess()

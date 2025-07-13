@@ -3,7 +3,9 @@ from chess.engine import SimpleEngine, Limit
 
 
 class StockfishAgent:
-    def __init__(self, stockfish_path, config={"Skill Level": 20}):
+    def __init__(self, stockfish_path, config=None):
+        if config is None:
+            config = {"Skill Level": 20}
         self.engine = SimpleEngine.popen_uci(stockfish_path)
         self.engine.configure(config)
 
