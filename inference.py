@@ -37,7 +37,7 @@ def stockfish_make_move(current_board):
             print("Stockfish failed to generate a move, retrying...")
     # move = chess.Move.from_uci(result)
     if not move:
-        game_over = current_board.is_game_over()
+        game_over = current_board.is_variant_draw()
         print("Stockfish failed to generate a move, game over:", game_over)
         return
     current_board.push(move)
