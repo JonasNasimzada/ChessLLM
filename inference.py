@@ -133,7 +133,7 @@ def play_chess(engine="stockfish"):
             amount_moves += 1
             if retry_count == 70:
                 print("Too many retries, resetting game.")
-                continue
+                break
             if board.turn:  # White's turn
                 if is_rl_agent_white:
                     rl_make_move(board, past_fen_moves)
@@ -155,8 +155,6 @@ def play_chess(engine="stockfish"):
                         retry_count += 1
                         amount_moves -= 2
                     black_agent = "Stockfish Agent"
-        if retry_count == 70:
-            continue
 
         result = board.result()
         print(
@@ -201,7 +199,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--engine', choices=['stockfish', 'minmax'], default='stockfish',)
+    parser.add_argument('--engine', choices=['stockfish', 'minmax'], default='stockfish', )
     args = parser.parse_args()
 
     # WandB initialization
