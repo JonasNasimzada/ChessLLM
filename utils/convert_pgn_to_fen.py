@@ -4,11 +4,10 @@ Reads a PGN file containing one or more games and writes a CSV where each row
 is one half-move (“ply”) with its corresponding FEN string.
 """
 import argparse
-import os
+import csv
 
 import chess
 import chess.pgn
-import csv
 
 
 def extract_all_fens_from_pgn(pgn_path: str, csv_path: str, amount_datapoints: int = 1_000_000) -> None:
