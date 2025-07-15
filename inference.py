@@ -123,10 +123,9 @@ def play_chess(engine="stockfish"):
         game_count += 1
         amount_moves = 0
         past_fen_moves = deque(maxlen=15)
+        print(f"Starting game {game_count}")
         white_agent = None
         black_agent = None
-        print(f"Starting game {game_count}")
-
         # Log game start
         wandb.log({"game_id": game_count})
 
@@ -134,30 +133,27 @@ def play_chess(engine="stockfish"):
         retry_count = 0
         while not board.is_game_over():
             amount_moves += 1
-            if retry_count == 70:
+            if retry_count == 50:
                 print("Too many retries, resetting game.")
                 break
-            if board.turn:  # White's turn
-                if is_rl_agent_white:
-                    rl_make_move(board, past_fen_moves)
-                    white_agent = "RL Agent"
-                else:
-                    set_back = engine_make_move(board, past_fen_moves, engine=engine)
-                    if set_back:
-                        retry_count += 1
-                        amount_moves -= 2
-                    white_agent = "Stockfish Agent"
 
-            else:  # Black's turn
-                if not is_rl_agent_white:
-                    rl_make_move(board, past_fen_moves)
-                    black_agent = "RL Agent"
-                else:
-                    set_back = engine_make_move(board, past_fen_moves, engine=engine)
-                    if set_back:
-                        retry_count += 1
-                        amount_moves -= 2
-                    black_agent = "Stockfish Agent"
+            original_turn = board.turn
+            is_rl_turn = (original_turn and is_rl_agent_white) or (not original_turn and not is_rl_agent_white)
+
+            if is_rl_turn:
+                rl_make_move(board, past_fen_moves)
+                agent = "RL Agent"
+            else:
+                set_back = engine_make_move(board, past_fen_moves, engine=engine)
+                if set_back:
+                    retry_count += 1
+                    amount_moves -= 2
+                agent = "Stockfish Agent"
+
+            if original_turn:
+                white_agent = agent
+            else:
+                black_agent = agent
 
         result = board.result()
         print(
