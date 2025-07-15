@@ -13,7 +13,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import GRPOTrainer, GRPOConfig, setup_chat_format
 
 from utils import encoding
-from deprecated_scripts.stockfish import StockfishAgent
+from deprecated_scripts.deprecated_stockfish import StockfishAgent
 
 STOCKFISH_PATH = "/home/hk-project-pai00012/st_st171793/chessLLM/stockfish-ubuntu-x86-64-avx2"
 FEN_REGEX = r'^\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s([K|Q|k|q]{1,4})\s(-|[a-h][1-8])\s(\d+\s\d+)$'
