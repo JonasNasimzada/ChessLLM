@@ -1,3 +1,9 @@
+"""
+This script sets up and runs a chess-playing application where a reinforcement learning (RL) agent competes against a classical chess engine.
+The RL agent uses a specified model type (linear, plain transformer, or pretrained transformer) for decision-making.
+The results of the games are logged to Weights & Biases (WandB) for analysis.
+"""
+
 import argparse
 import sys
 import threading
@@ -11,7 +17,24 @@ from utils.classicalAgent import ClassicalAgent
 
 
 class ChessApp:
+    """
+    A class to manage and run chess games between an RL agent and a classical chess engine.
+
+    Attributes:
+        max_games (int): The maximum number of games to play.
+        board (chess.Board): The current chess board state.
+        last_move (chess.Move): The last move made in the game.
+        opponent (ClassicalAgent): The classical chess engine opponent.
+        game_count (int): The number of games played so far.
+    """
+
     def __init__(self, max_games=100):
+        """
+        Initializes the ChessApp with the specified number of games.
+
+        Args:
+            max_games (int): The maximum number of games to play. Default is 100.
+        """
         super().__init__()
         self.board = chess.Board()
         self.max_games = max_games
@@ -21,6 +44,10 @@ class ChessApp:
         threading.Thread(target=self.game_loop, daemon=True).start()
 
     def game_loop(self):
+        """
+        The main game loop that runs the chess games between the RL agent and the classical engine.
+        Logs the results of each game to WandB.
+        """
         total_win = 0
         total_draw = 0
         total_loss = 0
@@ -68,13 +95,15 @@ class ChessApp:
 if __name__ == "__main__":
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+    # Parse command-line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', choices=['linear', 'plain_transformer', 'pretrained_transformer'], default='linear',
                         help='Model type to use for RL agent')
-    parser.add_argument('--ckpt', type=str, required=False)
-    parser.add_argument('--max_games', type=int, required=False, default=100)
+    parser.add_argument('--ckpt', type=str, required=False, help='Path to the model checkpoint file')
+    parser.add_argument('--max_games', type=int, required=False, default=100, help='Maximum number of games to play')
     args = parser.parse_args()
 
+    # Initialize WandB for logging
     wandb.init(
         project="chess-rl-inference",
         config={
@@ -86,6 +115,7 @@ if __name__ == "__main__":
     )
     sys.stdout = open(f'inference_{args.model}.log', 'w')
 
+    # Load the specified model type
     model = None
     if args.model == "linear":
         from utils.policyNetwork import LinearNetwork
@@ -102,12 +132,13 @@ if __name__ == "__main__":
         model = LinearLayer(model).to(DEVICE)
         model.load_state_dict(torch.load(args.ckpt))
 
+    # Initialize the RL agent
     rl_agent = RLAgent(lr=wandb.config.learning_rate, rl_model=model)
 
-    # Track gradients & parameters
+    # Track gradients and parameters in WandB
     wandb.watch(rl_agent.policy_net, log="all")
 
+    # Start the chess application
     app = ChessApp(args.max_games)
     app.game_loop()
     wandb.finish()
-

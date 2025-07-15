@@ -19,7 +19,35 @@ from utils.visualBoard import draw_board
 
 
 class ChessApp(tk.Tk):
+    """
+    A GUI application for playing chess between a Reinforcement Learning (RL) Transformer agent
+    and a Classical Chess agent. The application supports continual learning and long-term rewards.
+
+    Attributes:
+        opponent_agent (ClassicalAgent): The opponent agent (Classical Chess agent).
+        checkpoint_file (str): Path to the checkpoint file for saving the RL agent's state.
+        fast_mode (bool): If True, the GUI is hidden, and the game runs in the background.
+        board (chess.Board): The chess board object.
+        square_size (int): Size of each square on the chessboard.
+        canvas (tk.Canvas): Canvas for drawing the chessboard.
+        status_label (tk.Label): Label for displaying the game status.
+        last_move (chess.Move): The last move made in the game.
+        game_count (int): Counter for the number of games played.
+        model_statistic (list): List to store the results of each game (1 for win, -1 for loss, 0 for draw).
+        games_moves (list): List to store the number of moves in each game.
+        transformer_name (str): Name of the RL Transformer agent.
+        classical_name (str): Name of the Classical Chess agent.
+    """
+
     def __init__(self, opponent=None, checkpoint="policy_checkpoint.pth", fast_mode=False):
+        """
+        Initializes the ChessApp.
+
+        Args:
+            opponent (ClassicalAgent): The opponent agent (Classical Chess agent).
+            checkpoint (str): Path to the checkpoint file for saving the RL agent's state.
+            fast_mode (bool): If True, the GUI is hidden, and the game runs in the background.
+        """
         super().__init__()
         self.title("Transformer (RL) vs Classical Chess with Two-Phase Rewards")
         self.board = chess.Board()
@@ -44,6 +72,10 @@ class ChessApp(tk.Tk):
         self.opponent_agent = opponent_agent
 
     def game_loop(self):
+        """
+        Main game loop for playing multiple games between the RL Transformer agent and the Classical agent.
+        The loop continues until 101 games are played.
+        """
         while self.game_count < 101:
             self.board.reset()
             self.last_move = None
@@ -121,6 +153,10 @@ class ChessApp(tk.Tk):
 
 
 if __name__ == "__main__":
+    """
+    Entry point for the application. Parses command-line arguments, initializes the RL agent,
+    opponent agent, and starts the ChessApp GUI.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, choices=['simple', 'piecewise'], default='piecewise', required=False, )
     parser.add_argument('--model', choices=['linear', 'plain_transformer', 'pretrained_transformer'], default='linear',

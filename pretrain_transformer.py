@@ -20,11 +20,11 @@ from utils.encoding import encode_board, encode_move
 wandb.init(
     project="chess_policy_pretrain",
     config={
-        "batch_size": 256,
-        "chunksize": 15_000,
-        "epochs": 1000,
-        "lr": 1e-4,
-        "model": "SimpleTransformer"
+        "batch_size": 256,  # Number of samples per batch
+        "chunksize": 15_000,  # Number of rows to process per chunk
+        "epochs": 1000,  # Total number of training epochs
+        "lr": 1e-4,  # Learning rate for the optimizer
+        "model": "SimpleTransformer"  # Model name
     }
 )
 config = wandb.config
@@ -36,18 +36,33 @@ config = wandb.config
 
 class ChessDataset(Dataset):
     """
+    A PyTorch Dataset for loading chess positions and moves.
+
+    Args:
+        df (pd.DataFrame): A DataFrame containing FEN strings and UCI moves.
+
     Returns:
-        x : Tensor, shape (960,)   – board encoding + 128 zero-padding
-        y : Tensor, shape (1,)     – scalar 1.0  (expert move label)
+        x (Tensor): A tensor of shape (960,) representing the board encoding with padding.
+        y (Tensor): A scalar tensor representing the encoded move label.
     """
 
     def __init__(self, df: pd.DataFrame):
         self.df = df
 
     def __len__(self) -> int:
+        """Returns the total number of samples in the dataset."""
         return len(self.df)
 
     def __getitem__(self, idx):
+        """
+        Retrieves a single sample from the dataset.
+
+        Args:
+            idx (int): Index of the sample to retrieve.
+
+        Returns:
+            Tuple[Tensor, Tensor]: The board encoding and the encoded move label.
+        """
         fen = self.df.iloc[idx]["fen"]
         uci = self.df.iloc[idx]["move"]
         board = chess.Board(fen)
@@ -57,14 +72,23 @@ class ChessDataset(Dataset):
         except ValueError:
             return None, None
 
-        board_vec = encode_board(board)  # (832,)
-        zeros_128 = torch.zeros(128)  # (128,)
-        x = torch.cat([board_vec, zeros_128])  # (960,)
-        y = encode_move(move_obj).argmax()  # scalar tensor
+        board_vec = encode_board(board)  # Encode the board state (832,)
+        zeros_128 = torch.zeros(128)  # Padding vector (128,)
+        x = torch.cat([board_vec, zeros_128])  # Concatenate board encoding and padding (960,)
+        y = encode_move(move_obj).argmax()  # Encode the move as a scalar tensor
         return x, y
 
 
 def collate_fn(batch):
+    """
+    Custom collate function to filter out invalid samples.
+
+    Args:
+        batch (List[Tuple[Tensor, Tensor]]): A batch of samples.
+
+    Returns:
+        Tuple[Tensor, Tensor]: A batch of valid samples (inputs and labels).
+    """
     batch = [item for item in batch if item[0] is not None]
     if not batch:
         return None
@@ -83,7 +107,21 @@ def train_one_chunk(model: nn.Module,
                     device: torch.device,
                     epoch: int,
                     chunk_no: int) -> float:
-    """Train on a single DataLoader chunk and return the average loss."""
+    """
+    Trains the model on a single chunk of data.
+
+    Args:
+        model (nn.Module): The model to train.
+        dataloader (DataLoader): DataLoader for the current chunk.
+        optimizer (torch.optim.Optimizer): Optimizer for training.
+        loss_fn (nn.Module): Loss function.
+        device (torch.device): Device to use for training.
+        epoch (int): Current epoch number.
+        chunk_no (int): Current chunk number.
+
+    Returns:
+        float: The average loss for the chunk.
+    """
     model.train()
     total_loss = 0.0
     count = 0
@@ -130,7 +168,19 @@ def train_from_large_csv(csv_file: str,
                          batch_size: int = None,
                          chunksize: int = None,
                          epochs: int = None) -> None:
-    """Stream a CSV file in manageable chunks and train the model."""
+    """
+    Trains the model using data streamed from a large CSV file.
+
+    Args:
+        csv_file (str): Path to the CSV file containing the dataset.
+        model (nn.Module): The model to train.
+        optimizer (torch.optim.Optimizer): Optimizer for training.
+        loss_fn (nn.Module): Loss function.
+        device (torch.device): Device to use for training.
+        batch_size (int, optional): Batch size for training. Defaults to config.batch_size.
+        chunksize (int, optional): Number of rows to process per chunk. Defaults to config.chunksize.
+        epochs (int, optional): Number of training epochs. Defaults to config.epochs.
+    """
     # Update config to W&B
     batch_size = batch_size or config.batch_size
     chunksize = chunksize or config.chunksize
@@ -161,8 +211,9 @@ def train_from_large_csv(csv_file: str,
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, required=True)
-    parser.add_argument('--ckpt_dir', type=str, required=False, default="checkpoints/pretrain_transformer/v2")
+    parser.add_argument('--dataset', type=str, required=True, help="Path to the dataset CSV file.")
+    parser.add_argument('--ckpt_dir', type=str, required=False, default="checkpoints/pretrain_transformer/v2",
+                        help="Directory to save model checkpoints.")
     args = parser.parse_args()
 
     csv_file = args.dataset
@@ -185,7 +236,7 @@ if __name__ == "__main__":
         chunksize=config.chunksize,
         epochs=config.epochs,
     )
-    # final save
+    # Final save
     final_path = CHECKPOINT_DIR / "final.pt"
     torch.save(model.state_dict(), final_path)
     wandb.save(str(final_path))

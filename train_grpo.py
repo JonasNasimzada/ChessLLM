@@ -1,3 +1,9 @@
+"""
+This script fine-tunes a pre-trained language model using GRPO (Guided Reward Policy Optimization) on a custom dataset.
+It defines multiple reward functions for evaluating chess moves and trains the model to optimize these rewards.
+The fine-tuned model is saved and optionally pushed to the Hugging Face model hub.
+"""
+
 import argparse
 import copy
 import re
@@ -12,6 +18,16 @@ from utils.encoding import isolate_fen_notation, isolate_move_notation, UCI_REGE
 
 
 def end_game_reward(prompts, completions, **kwargs):
+    """
+    Computes rewards based on the outcome of the chess game after a move.
+
+    Args:
+        prompts (list): List of prompts containing FEN strings.
+        completions (list): List of completions containing move strings.
+
+    Returns:
+        list: Rewards for each move based on game outcome.
+    """
     rewards = []
     for prompt, completion in zip(prompts, completions):
         fen = isolate_fen_notation(prompt)
@@ -46,6 +62,16 @@ def end_game_reward(prompts, completions, **kwargs):
 
 
 def piece_reward(prompts, completions, **kwargs):
+    """
+    Computes rewards based on the material gained or lost after a move.
+
+    Args:
+        prompts (list): List of prompts containing FEN strings.
+        completions (list): List of completions containing move strings.
+
+    Returns:
+        list: Rewards for each move based on material changes.
+    """
     rewards = []
     for prompt, completion in zip(prompts, completions):
         fen = isolate_fen_notation(prompt)
@@ -73,7 +99,16 @@ def piece_reward(prompts, completions, **kwargs):
 
 
 def valid_uci_move_reward(prompts, completions, **kwargs):
-    """Reward function that checks if the completion is a valid UCI move."""
+    """
+    Computes rewards based on whether the move is a valid UCI move.
+
+    Args:
+        prompts (list): List of prompts containing FEN strings.
+        completions (list): List of completions containing move strings.
+
+    Returns:
+        list: Rewards for each move based on validity.
+    """
     rewards = []
     for prompt, completion in zip(prompts, completions):
         fen = isolate_fen_notation(prompt)
@@ -98,6 +133,17 @@ def valid_uci_move_reward(prompts, completions, **kwargs):
 
 
 def check_answer(prompts, completions, answer, **kwargs):
+    """
+    Computes rewards based on whether the move matches the expected answer.
+
+    Args:
+        prompts (list): List of prompts containing FEN strings.
+        completions (list): List of completions containing move strings.
+        answer (list): List of correct answers.
+
+    Returns:
+        list: Rewards for each move based on correctness.
+    """
     question = prompts[0][-1]["content"]
     responses = [completion[0]["content"] for completion in completions]
     extracted_responses = [
@@ -117,21 +163,23 @@ def check_answer(prompts, completions, answer, **kwargs):
 
 
 if __name__ == "__main__":
+    # Parse command-line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--pretrained_model', type=str, required=True, default="JonasNasimzada/Llama-3.2-3B-Instruct",
-                        help="Model which should be grpo trained")
+                        help="Model which should be GRPO trained.")
     parser.add_argument('--dataset', type=str, required=True, default="grpo_data_dataset.json",
-                        help="Path to the dataset file. file has to be json format with prompts and completions.")
+                        help="Path to the dataset file. File must be in JSON format with prompts and completions.")
     parser.add_argument('--output_model', type=str, required=True, default="grpo_model",
                         help="Name of the new model to be saved and pushed to the hub.")
     parser.add_argument('--output', type=str, default='output/grpo', required=False,
-                        help="Output directory for the fine-tuned model. ")
-
+                        help="Output directory for the fine-tuned model.")
     args = parser.parse_args()
 
+    # Model and tokenizer configuration
     max_seq_length = 2048
     lora_rank = 64
 
+    # Load pre-trained model and tokenizer
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=args.pretrained_model,
         max_seq_length=max_seq_length,
@@ -140,9 +188,9 @@ if __name__ == "__main__":
         max_lora_rank=lora_rank,
         gpu_memory_utilization=0.6,
         device_map='auto',
-
     )
 
+    # Apply PEFT (LoRA) to the model
     model = FastLanguageModel.get_peft_model(
         model,
         r=16,
@@ -157,6 +205,7 @@ if __name__ == "__main__":
         loftq_config=None,
     )
 
+    # Load and preprocess the dataset
     dataset = load_dataset("json", data_files=args.dataset, split="train")
 
     max_prompt_length = max(dataset.map(
@@ -165,6 +214,7 @@ if __name__ == "__main__":
     print(f"Max prompt length: {max_prompt_length}")
     print(f"Max completion length: {max_seq_length - max_prompt_length}")
 
+    # GRPO training configuration
     training_args = GRPOConfig(
         learning_rate=5e-6,
         weight_decay=0.1,
@@ -186,6 +236,8 @@ if __name__ == "__main__":
         log_completions=True,
         wandb_log_unique_prompts=True
     )
+
+    # Initialize the GRPO trainer
     trainer = GRPOTrainer(
         model=model,
         processing_class=tokenizer,
@@ -198,7 +250,11 @@ if __name__ == "__main__":
         args=training_args,
         train_dataset=dataset,
     )
+
+    # Train the model
     trainer.train()
+
+    # Save and push the fine-tuned model and tokenizer
     model.save_pretrained(args.output_model)
     tokenizer.save_pretrained(args.output_model)
     model.push_to_hub(args.output_model)

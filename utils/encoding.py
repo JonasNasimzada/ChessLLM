@@ -40,9 +40,14 @@ piece_reward = {
 def encode_board(board):
     """
     Encode the board as a flattened one-hot tensor.
-    Each of 64 squares is represented as a one-hot vector of length 13.
+    Each of the 64 squares is represented as a one-hot vector of length 13.
     (Index 0 indicates an empty square.)
-    Returns a torch tensor of shape (832,).
+
+    Args:
+        board (chess.Board): The chess board to encode.
+
+    Returns:
+        torch.Tensor: A tensor of shape (832,) representing the board.
     """
     encoding = torch.zeros(64, 13)
     for square in chess.SQUARES:
@@ -58,7 +63,13 @@ def encode_board(board):
 def encode_move(move):
     """
     Encode a move as the concatenation of two one-hot vectors for the source and target squares.
-    Each one-hot is length 64, so the result is a 128-dimension tensor.
+    Each one-hot vector is of length 64, resulting in a 128-dimensional tensor.
+
+    Args:
+        move (chess.Move): The chess move to encode.
+
+    Returns:
+        torch.Tensor: A tensor of shape (128,) representing the move.
     """
     move_encoding = torch.zeros(128)
     move_encoding[move.from_square] = 1.0
@@ -67,7 +78,15 @@ def encode_move(move):
 
 
 def simple_evaluate_material(board):
-    """A simple material evaluation function."""
+    """
+    Evaluate the material balance on the board.
+
+    Args:
+        board (chess.Board): The chess board to evaluate.
+
+    Returns:
+        int: The material score of the board.
+    """
     score = 0
     score_new = 0
     piece_list = count_pieces(board)
@@ -78,7 +97,15 @@ def simple_evaluate_material(board):
 
 
 def count_pieces(board):
-    """Count the pieces on the board and return a dictionary with counts."""
+    """
+    Count the pieces on the board.
+
+    Args:
+        board (chess.Board): The chess board to analyze.
+
+    Returns:
+        dict: A dictionary with counts of pieces by color and type.
+    """
     cnt = {}
     for square in chess.SQUARES:
         piece = board.piece_at(square)
@@ -89,7 +116,16 @@ def count_pieces(board):
 
 
 def evaluate_board_difference_score(old_board, new_board):
-    """Calculate the difference in material between two boards."""
+    """
+    Calculate the difference in material between two boards.
+
+    Args:
+        old_board (chess.Board): The board before the move.
+        new_board (chess.Board): The board after the move.
+
+    Returns:
+        tuple: Two lists, one for lost pieces and one for captured pieces.
+    """
     old_counts = count_pieces(old_board)
     new_counts = count_pieces(new_board)
 
@@ -124,6 +160,15 @@ UCI_REGEX = r'\b([a-h][1-8][a-h][1-8][nbrq]?)\b'
 
 
 def isolate_fen_notation(prompt):
+    """
+    Extract the FEN notation from a given prompt.
+
+    Args:
+        prompt (str): The input prompt containing FEN notation.
+
+    Returns:
+        str or None: The extracted FEN string, or None if not found.
+    """
     user_prompt = prompt[1]["content"]
     pattern = re.compile(FEN_REGEX, re.MULTILINE)
     search = pattern.findall(user_prompt)
@@ -135,6 +180,15 @@ def isolate_fen_notation(prompt):
 
 
 def isolate_move_notation(response):
+    """
+    Extract the UCI move notation from a given response.
+
+    Args:
+        response (str): The input response containing UCI move notation.
+
+    Returns:
+        str or None: The extracted UCI move string, or None if not found.
+    """
     search = re.search(UCI_REGEX, response)
     if search:
         uci = search.group(1)

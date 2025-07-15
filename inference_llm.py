@@ -1,3 +1,8 @@
+"""
+This script implements a chess-playing engine that uses a combination of reinforcement learning (RL) and classical chess engines (e.g., Stockfish).
+It defines functions for making moves, generating moves using a language model, and playing chess games while logging results to Weights & Biases (WandB).
+"""
+
 import os
 import random
 import sys
@@ -17,6 +22,7 @@ from utils.encoding import isolate_move_notation
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+# System message template for the RL agent
 system_message = """You are the world’s strongest chess engine. You will be given the full move-history in FEN notation followed by the current position in FEN. Your task is to think through the position step by step—evaluating piece placement, pawn structure, king safety, candidate moves and tactical motifs—and then output exactly one best move in UCI format.\n\nStep-by-step guide:\n1. Material count and piece activity\n2. Pawn structure and central control\n3. King safety for both sides\n4. Candidate moves (e.g. developing, challenging the bishop, castling)\n5. Tactical considerations (pins, forks, discovered attacks)\n6. Long-term strategic plans\n\nAfter reasoning, output only the best move in UCI format.Respond in the following format:
 <think>
 You should reason between these tags.
@@ -24,11 +30,23 @@ You should reason between these tags.
 The resulting UCI move should be between <answer> </answer> tags\n
 Always use <think> </think> tags even if they are not necessary."""
 
+# User message template for prompting the RL agent
 user_message = """Move history (in FEN):\n{past_moves}\n\nCurrent position (FEN):\n{current_move}\n\nWhat is the next best move in UCI format?"""
 user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is the next best move in UCI format?"""
 
 
 def engine_make_move(current_board, past_fen_moves, engine="stockfish"):
+    """
+    Makes a move using the specified chess engine (Stockfish or Minimax).
+
+    Args:
+        current_board (chess.Board): The current chess board state.
+        past_fen_moves (deque): A deque containing the FEN strings of past moves.
+        engine (str): The engine to use for move generation ("stockfish" or "minmax").
+
+    Returns:
+        bool: True if the board state was reset due to invalid moves, False otherwise.
+    """
     set_moves_back = False
     if engine == "stockfish":
         if not current_board.is_valid():
@@ -56,6 +74,15 @@ def engine_make_move(current_board, past_fen_moves, engine="stockfish"):
 
 
 def generate_move(prompt):
+    """
+    Generates a move using the RL model based on the given prompt.
+
+    Args:
+        prompt (list): A list of dictionaries containing the system and user messages.
+
+    Returns:
+        str: The best move in UCI format.
+    """
     inputs = tokenizer.apply_chat_template(
         prompt,
         tokenize=True,
@@ -78,6 +105,13 @@ def generate_move(prompt):
 
 
 def rl_make_move(current_board, past_moves):
+    """
+    Makes a move using the RL agent and logs the move duration to WandB.
+
+    Args:
+        current_board (chess.Board): The current chess board state.
+        past_moves (deque): A deque containing the FEN strings of past moves.
+    """
     start_time = time.time()
     current_fen = current_board.fen()
     prompt = [
@@ -109,6 +143,12 @@ def rl_make_move(current_board, past_moves):
 
 
 def play_chess(engine="stockfish"):
+    """
+    Plays a series of chess games between the RL agent and the specified engine.
+
+    Args:
+        engine (str): The engine to use for the opponent ("stockfish" or "minmax").
+    """
     game_count = 0
     total_rl_wins = 0
     total_rl_draws = 0
@@ -236,7 +276,8 @@ if __name__ == "__main__":
         args.stockfish,
         parameters={
             "Skill Level": config.stockfish_skill,
-            "Debug Log File": f"./stockfish_debug_{args.model}_{args.engine}.log".replace("JonasNasimzada/", "").replace("/", "_"),
+            "Debug Log File": f"./stockfish_debug_{args.model}_{args.engine}.log".replace("JonasNasimzada/",
+                                                                                          "").replace("/", "_"),
             "Hash": config.stockfish_hash,
             "Threads": config.stockfish_threads,
         }

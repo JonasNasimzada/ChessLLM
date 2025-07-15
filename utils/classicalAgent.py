@@ -7,10 +7,33 @@ from utils.encoding import simple_evaluate_material
 # Classical Agent (Minimax with Alpha-Beta)
 #############################################
 class ClassicalAgent:
+    """
+    A classical chess agent that uses the Minimax algorithm with Alpha-Beta pruning
+    to determine the best move.
+
+    Attributes:
+        depth (int): The depth of the Minimax search tree.
+    """
+
     def __init__(self, depth=3):
+        """
+        Initializes the ClassicalAgent with a specified search depth.
+
+        Args:
+            depth (int): The depth of the Minimax search tree. Default is 3.
+        """
         self.depth = depth
 
     def get_move(self, board):
+        """
+        Determines the best move for the current board state using the Minimax algorithm.
+
+        Args:
+            board (chess.Board): The current chess board state.
+
+        Returns:
+            chess.Move: The chosen move for the agent.
+        """
         legal_moves = list(board.legal_moves)
         best_moves = []
         best_eval = -float('inf')
@@ -29,6 +52,19 @@ class ClassicalAgent:
         return chosen_move
 
     def minimax(self, board, depth, alpha, beta, maximizing):
+        """
+        Implements the Minimax algorithm with Alpha-Beta pruning to evaluate board states.
+
+        Args:
+            board (chess.Board): The current chess board state.
+            depth (int): The remaining depth of the search tree.
+            alpha (float): The best value that the maximizer currently can guarantee.
+            beta (float): The best value that the minimizer currently can guarantee.
+            maximizing (bool): True if the current player is maximizing, False otherwise.
+
+        Returns:
+            float: The evaluation score of the board state.
+        """
         if depth == 0 or board.is_game_over():
             return simple_evaluate_material(board)
         if maximizing:

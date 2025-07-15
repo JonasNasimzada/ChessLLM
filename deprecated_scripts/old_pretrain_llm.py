@@ -5,7 +5,6 @@
 import torch
 from accelerate import PartialState
 from datasets import load_dataset
-from huggingface_hub import login
 from peft import LoraConfig
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from trl import setup_chat_format, SFTTrainer, SFTConfig
