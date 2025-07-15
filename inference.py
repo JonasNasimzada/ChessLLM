@@ -206,6 +206,7 @@ if __name__ == "__main__":
     parser.add_argument('--engine', choices=['stockfish', 'minmax'], default='stockfish', )
     args = parser.parse_args()
 
+    os.environ["WANDB_SILENT"] = "true"
     log_file = f'inference_{args.model}_{args.engine}.log'.replace("JonasNasimzada/", "")
     sys.stdout = open(log_file, 'w')
 
