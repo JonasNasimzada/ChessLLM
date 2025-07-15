@@ -1,5 +1,15 @@
 # ChessLLM
 
+## Overview
+```
+.
+├── pretrain_transformer.py     # Supervised pre-training for transformer policy network
+├── ppo_transformer.py          # RL fine-tuning of transformer policy (episodic training; W&B logging)
+├── train_grpo.py               # GRPO prompt generation and dataset creation for LLM fine-tuning
+├── inference_transformer.py    # Inference-time move selection using trained transformer policy
+└── inference_llm.py            # Inference-time move generation using fine-tuned language model
+```
+
 ## Install Environment
 
 `conda create -n chessllm python=3.10 -y`
@@ -22,21 +32,12 @@
 
 `MAX_JOBS=8 pip install flash-attn --no-build-isolation`
 
-## Overview
-```
-.
-├── pretrain_transformer.py     # Supervised pre-training for transformer policy network
-├── ppo_transformer.py          # RL fine-tuning of transformer policy (episodic training; W&B logging)
-├── train_grpo.py               # GRPO prompt generation and dataset creation for LLM fine-tuning
-├── inference_transformer.py    # Inference-time move selection using trained transformer policy
-└── inference_llm.py            # Inference-time move generation using fine-tuned language model
-```
-
-
 ## Download the Stockfish binary
+
 Download the Stockfish binary for your system from the [official repository](https://stockfishchess.org/download/).:
 
 After downloading, unpack it with:
+
 ```bash
 tar -xvf stockfish-ubuntu-x86-64-avx2.tar.gz
 ```
