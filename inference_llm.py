@@ -172,6 +172,7 @@ def play_chess(engine="stockfish"):
             amount_moves += 1
             if retry_count == 50:
                 print("Too many retries, resetting game.")
+                game_count -= 1
                 break
 
             original_turn = board.turn
