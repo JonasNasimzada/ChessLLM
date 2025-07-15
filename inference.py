@@ -1,3 +1,4 @@
+import os
 import random
 import time
 from collections import deque
@@ -202,7 +203,8 @@ if __name__ == "__main__":
     parser.add_argument('--engine', choices=['stockfish', 'minmax'], default='stockfish', )
     args = parser.parse_args()
 
-    sys.stdout = open(f'inference_{args.model}_{args.engine}.log', 'w')
+    log_file = f'inference_{args.model}_{args.engine}.log'.replace("JonasNasimzada/", "")
+    sys.stdout = open(log_file, 'w')
 
     # WandB initialization
     wandb.init(
