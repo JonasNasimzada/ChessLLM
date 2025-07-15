@@ -210,8 +210,6 @@ if __name__ == "__main__":
     log_file = f'inference_{args.model}_{args.engine}.log'.replace("JonasNasimzada/", "")
     sys.stdout = open(log_file, 'w')
 
-    log_file_stockfish = open(f'stockfish_debug_{args.model}_{args.engine}.log', 'w')
-
     # WandB initialization
     wandb.init(
         project="chess_engine_evaluation",
@@ -242,7 +240,7 @@ if __name__ == "__main__":
         "../stockfish-ubuntu-x86-64-avx2",
         parameters={
             "Skill Level": config.stockfish_skill,
-            "Debug Log File": log_file_stockfish,
+            "Debug Log File": f"./stockfish_debug_{args.model}_{args.engine}.log".replace("JonasNasimzada/", ""),
             "Hash": config.stockfish_hash,
             "Threads": config.stockfish_threads,
         }
