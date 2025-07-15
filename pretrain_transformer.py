@@ -1,3 +1,5 @@
+import argparse
+
 import wandb
 from pathlib import Path
 import pandas as pd
@@ -6,6 +8,7 @@ import chess
 from torch.utils.data import Dataset, DataLoader
 from torch import nn
 from tqdm import tqdm
+from utils.policyNetwork import SimpleTransformer
 
 from utils.encoding import encode_board, encode_move
 
@@ -13,12 +16,9 @@ from utils.encoding import encode_board, encode_move
 # Configuration & W&B Initialization
 # ----------------------------------------------------------------------
 
-CHECKPOINT_DIR = Path("checkpoints/pretrain_transformer/v2")
-CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
-
 # Initialize a new W&B run
 wandb.init(
-    project="chess_policy_pretrain",  # replace with your project name
+    project="chess_policy_pretrain",
     config={
         "batch_size": 256,
         "chunksize": 15_000,
@@ -153,26 +153,22 @@ def train_from_large_csv(csv_file: str,
             print(f"Chunk {chunk_no} completed — average loss: {avg_loss:.4f}")
 
         if epoch % 20 == 0:
-            # Save checkpoint and log as artifact
             ckpt_path = CHECKPOINT_DIR / f"epoch{epoch}.pt"
             torch.save(model.state_dict(), ckpt_path)
 
         print(f"Epoch {epoch} completed.\n")
-        # Optionally, you can log epoch summary metrics here
-
-
-# ----------------------------------------------------------------------
-# Entry point
-# ----------------------------------------------------------------------
-
-
 
 
 if __name__ == "__main__":
-    csv_file = "100000_data.csv"
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset', type=str, required=True)
+    parser.add_argument('--ckpt_dir', type=str, required=False, default="checkpoints/pretrain_transformer/v2")
+    args = parser.parse_args()
 
-    from policyNetwork import SimpleTransformer
+    csv_file = args.dataset
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    CHECKPOINT_DIR = Path(args.ckpt_dir)
+    CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
 
     model = SimpleTransformer().to(device)
 
@@ -190,7 +186,7 @@ if __name__ == "__main__":
         epochs=config.epochs,
     )
     # final save
-    final_path = CHECKPOINT_DIR / "best.pt"
+    final_path = CHECKPOINT_DIR / "final.pt"
     torch.save(model.state_dict(), final_path)
     wandb.save(str(final_path))
 

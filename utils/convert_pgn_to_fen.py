@@ -47,18 +47,9 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str) -> None:
                 writer.writerow([game_index, ply_index, uci, fen])
                 i += 1
 
-
     print(f"Done! Wrote every ply’s UCI and FEN to: {csv_path}")
 
 
 if __name__ == "__main__":
-    # INPUT_PGN_PATH = "./data"
-    #
-    # for dirpath, dirname, files in os.walk(os.path.dirname(INPUT_PGN_PATH)):
-    #     for file in files:
-    #         if file.endswith(".pgn"):
-    #             extract_all_fens_from_pgn(os.path.join(dirpath, file),
-    #                                       os.path.join(dirpath, file.replace(".pgn", ".csv")))
-
     INPUT_PGN_FILE = "../data_chess/LumbrasGigaBase_OTB_2025.pgn"
     extract_all_fens_from_pgn(INPUT_PGN_FILE, "grpo_data/grpo_Data.csv")

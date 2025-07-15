@@ -1,3 +1,7 @@
+####################################################################################
+# THIS SCRIPT IS DEPRECATED AND NO LONGER USED. IT IS LEFT HERE FOR REFERENCE ONLY.#
+####################################################################################
+
 from opensloth.opensloth_config import (
     FastModelArgs,
     LoraArgs,
@@ -9,16 +13,15 @@ from opensloth.scripts.opensloth_sft_trainer import run_mp_training, setup_envs
 # 2 GPUs with packing configuration
 GLOBAL_BZ = 32
 
-DEVICES = [0]
+DEVICES = [0, 1]
 
-BZ = 1  # if sequence packing, then should be 1, larger does not contribute to speed
+BZ = 1
 opensloth_config = OpenSlothConfig(
     data_cache_path="data/cache_Llama-3.2-3B-Instruct",
     dataset_text_field="text",
     devices=DEVICES,
     fast_model_args=FastModelArgs(
         model_name="unsloth/Llama-3.2-3B-Instruct",
-        # model_name="unsloth/DeepSeek-R1-Distill-Qwen-1.5B",
         max_seq_length=2048,
         load_in_4bit=True,
     ),
@@ -46,7 +49,6 @@ training_config = TrainingArguments(
     resume_from_checkpoint="outputs/exps/Llama-3.2-3B-Instruct_NEW",
     save_only_model=False,
     ignore_data_skip=True,
-    # max_steps=60,
     per_device_train_batch_size=BZ,
     gradient_accumulation_steps=GLOBAL_BZ // (len(DEVICES) * BZ),
     learning_rate=2e-4,
@@ -59,7 +61,7 @@ training_config = TrainingArguments(
     optim="adamw_8bit",
     seed=3407,
     push_to_hub=True,
-    report_to="wandb",  # or wandb/tensorboard
+    report_to="wandb",
 )
 
 if __name__ == "__main__":

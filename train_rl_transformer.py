@@ -1,3 +1,4 @@
+import argparse
 import copy
 import threading
 import time
@@ -6,13 +7,10 @@ import tkinter as tk
 import chess
 import torch.optim as optim
 
-import rlAgent
-from policyNetwork import LinearNetwork, SimpleTransformer
-from utils.classicalAgent import ClassicalAgent
-from utils.stockfish import StockfishAgent
-from utils.visualBoard import draw_board
+from utils import rlAgent
 import wandb
-import torch
+from utils.classicalAgent import ClassicalAgent
+from utils.visualBoard import draw_board
 
 
 #############################################
@@ -21,7 +19,7 @@ import torch
 
 
 class ChessApp(tk.Tk):
-    def __init__(self, opponent=None):
+    def __init__(self, opponent=None, checkpoint="policy_checkpoint.pth", fast_mode=False):
         super().__init__()
         self.title("Transformer (RL) vs Classical Chess with Two-Phase Rewards")
         self.board = chess.Board()
@@ -32,21 +30,20 @@ class ChessApp(tk.Tk):
         self.status_label = tk.Label(self, text="Game start", font=("Helvetica", 16, "bold"))
         self.status_label.pack(pady=10)
         self.last_move = None
-        self.fast_mode = True  # For first 100 games: fast mode (no UI, no delays)
+        self.fast_mode = fast_mode
         self.game_count = 0
         self.withdraw()  # Hide the window in fast mode.
         self.model_statistic = []
         self.games_moves = []
         self.transformer_name = "Transformer (White)"
         self.classical_name = "Classical (Black)"
+        self.checkpoint_file = checkpoint
         threading.Thread(target=self.game_loop, daemon=True).start()
         if not self.fast_mode:
             self.deiconify()
         self.opponent_agent = opponent_agent
 
     def game_loop(self):
-        checkpoint_file = "policy_checkpoint.pth"
-        # while True:
         while self.game_count < 101:
             self.board.reset()
             self.last_move = None
@@ -71,18 +68,16 @@ class ChessApp(tk.Tk):
 
                 else:  # Classical Agent as Black.
                     move = self.opponent_agent.get_move(self.board)
-
                     self.last_move = move
                     self.board.push(move)
 
                 if not self.fast_mode:
-                    self.after(0, draw_board(board=self.board, canvas=self.canvas, square_size=self.square_size,
+                    self.after(1, draw_board(board=self.board, canvas=self.canvas, square_size=self.square_size,
                                              last_move=self.last_move))
-                    # Determine status text based on who moved.
                     status_text = (f"{self.transformer_name} moved: {move.uci()}"
                                    if self.board.turn else f"{self.classical_name} moved: {move.uci()}")
                     self.after(0, lambda text=status_text: self.status_label.config(text=text))
-                    time.sleep(0.5)
+                    time.sleep(1.0)
             # End of game.
             result = self.board.result()  # "1-0", "0-1", or "1/2-1/2"
             self.games_moves.append(amount_moves)
@@ -115,14 +110,9 @@ class ChessApp(tk.Tk):
             print(final_status)
             self.status_label.config(text=final_status)
             # Save checkpoint to the same file.
-            rl_agent.save_checkpoint(filename=checkpoint_file)
+            rl_agent.save_checkpoint(filename=self.checkpoint_file)
             if not self.fast_mode:
                 time.sleep(3)
-            # After 100 games in fast mode, switch to UI mode.
-            # if self.game_count == 10 and self.fast_mode:
-            #     print("Completed 100 games in fast mode; switching to UI mode with delays.")
-            #     self.fast_mode = False
-            #     self.deiconify()
         amount_won = len([x for x in self.model_statistic if x == 1])
         amount_draw = len([x for x in self.model_statistic if x == 0])
         amount_lost = len([x for x in self.model_statistic if x == -1])
@@ -131,43 +121,58 @@ class ChessApp(tk.Tk):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--model', type=str, choices=['simple', 'piecewise'], default='piecewise', required=False, )
+    parser.add_argument('--model', choices=['linear', 'plain_transformer', 'pretrained_transformer'], default='linear',
+                        help='Model type to use for RL agent')
+    parser.add_argument('--ckpt', type=str, required=False)
+    parser.add_argument('--epochs', type=int, required=False, default=100)
+    args = parser.parse_args()
+
     run = wandb.init(
-        # Set the wandb entity where your project will be logged (generally your team name).
         entity="lab_course",
-        # Set the wandb project where this run will be logged.
-        project="ChessLLM",
-        # Track hyperparameters and run metadata.
+        project="rl_chess_transformer",
         config={
             "learning_rate": 1e-3,
-            "architecture": "Transformer",
-            "dataset": "NONE",
-            "epochs": 100,
-            "Agent": "piecewise",
+            "architecture": args.model,
+            "epochs": args.epochs,
+            "Agent": args.model,
         },
     )
     import torch
 
-    # Enable cuDNN autotuner to find the best algorithm for your hardware
-    torch.backends.cudnn.benchmark = True
-    # Select GPU if available
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    torch.backends.cudnn.benchmark = True
-    print(f"Using device: {device}")
-    # Instantiate the Transformer network and move it to GPU
-    network = SimpleTransformer().to(device)
-    # Instantiate the RL agent (Transformer for White).
-    rl_agent = rlAgent.SimpleAgent(LinearNetwork(), optim.AdamW)
-    rl_agent = rlAgent.SimpleAgent(network, optim.AdamW)
-    # rl_agent = rlAgent.PiecewiseAgent(network, optim.AdamW)
+    DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    opponent_agent = ClassicalAgent(depth=3)  # Classical Agent for Black.
-    # stockfish_path = "stockfish_path"  # Path to your Stockfish binary.
-    # opponent_agent = StockfishAgent(stockfish_path=stockfish_path)  # Classical Agent for Black.
+    network = None
+    if args.model == "linear":
+        from utils.policyNetwork import LinearNetwork
 
-    # checkpoint_file = "policy_checkpoint.pth"
-    # if os.path.exists(checkpoint_file):
-    #     rl_agent.load_checkpoint(checkpoint_file)
+        network = LinearNetwork().to(DEVICE)
 
-    app = ChessApp(opponent=opponent_agent)
+    elif args.model == "plain_transformer":
+        from utils.policyNetwork import PlainSimpleTransformer
+
+        network = PlainSimpleTransformer().to(DEVICE)
+
+    elif args.model == "pretrained_transformer":
+        from utils.policyNetwork import LinearLayer, SimpleTransformer
+
+        network = SimpleTransformer().to(DEVICE)
+        network = LinearLayer(network).to(DEVICE)
+        network.load_state_dict(torch.load(args.ckpt))
+
+    rl_agent = None
+    if args.model == "simple":
+
+        rl_agent = rlAgent.SimpleAgent(network, optim.AdamW)
+    elif args.rl_agent == "piecewise":
+
+        rl_agent = rlAgent.PiecewiseAgent(network, optim.AdamW)
+
+    opponent_agent = ClassicalAgent(depth=3)
+    checkpoint_file = f"rl_transformer_{args.model}_{args.model}.pth"
+
+    app = ChessApp(opponent=opponent_agent, checkpoint=checkpoint_file)
     app.mainloop()
+    app.quit()
     run.finish()

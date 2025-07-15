@@ -1,11 +1,12 @@
-# Modules for fine-tuning
-# Hugging Face modules
-from unsloth import FastLanguageModel
-from trl import SFTTrainer, SFTConfig  # Trainer for supervised fine-tuning (SFT)
+####################################################################################
+# THIS SCRIPT IS DEPRECATED AND NO LONGER USED. IT IS LEFT HERE FOR REFERENCE ONLY.#
+####################################################################################
+
 from datasets import load_dataset  # Lets you load fine-tuning datasets
-from unsloth import is_bfloat16_supported  # Checks if the hardware supports bfloat16 precision
-from unsloth.chat_templates import get_chat_template
 from transformers import DataCollatorForSeq2Seq
+from trl import SFTTrainer, SFTConfig  # Trainer for supervised fine-tuning (SFT)
+from unsloth import FastLanguageModel
+from unsloth.chat_templates import get_chat_template
 from unsloth.chat_templates import train_on_responses_only
 
 max_seq_length = 2048  # Define the maximum sequence length a model can handle (i.e. how many tokens can be processed at once)

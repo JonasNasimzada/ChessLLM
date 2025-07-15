@@ -1,3 +1,7 @@
+####################################################################################
+# THIS SCRIPT IS DEPRECATED AND NO LONGER USED. IT IS LEFT HERE FOR REFERENCE ONLY.#
+####################################################################################
+
 import chess
 from chess.engine import SimpleEngine, Limit
 

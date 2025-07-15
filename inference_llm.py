@@ -1,23 +1,20 @@
 import os
 import random
+import sys
 import time
 from collections import deque
-import sys
 
 import chess
 import torch
-import wandb
-from unsloth import FastLanguageModel
-from transformers import TextStreamer
-from unsloth.chat_templates import get_chat_template
 from stockfish import Stockfish
+from transformers import TextStreamer
+from unsloth import FastLanguageModel
+from unsloth.chat_templates import get_chat_template
 
+import wandb
 from utils.classicalAgent import ClassicalAgent
-from utils.stockfish import StockfishAgent
-
 from utils.encoding import isolate_move_notation
 
-# Initialize device
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 system_message = """You are the world’s strongest chess engine. You will be given the full move-history in FEN notation followed by the current position in FEN. Your task is to think through the position step by step—evaluating piece placement, pawn structure, king safety, candidate moves and tactical motifs—and then output exactly one best move in UCI format.\n\nStep-by-step guide:\n1. Material count and piece activity\n2. Pawn structure and central control\n3. King safety for both sides\n4. Candidate moves (e.g. developing, challenging the bishop, castling)\n5. Tactical considerations (pins, forks, discovered attacks)\n6. Long-term strategic plans\n\nAfter reasoning, output only the best move in UCI format.Respond in the following format:
@@ -200,10 +197,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, default='JonasNasimzada/Llama-3.2-3B-Instruct', )
     parser.add_argument('--engine', choices=['stockfish', 'minmax'], default='stockfish', )
+    parser.add_argument('--stockfish', type=int, default="../stockfish-ubuntu-x86-64-avx2",
+                        help='Path to stockfish binary')
+    parser.add_argument('--max_games', type=int, required=False, default=100)
     args = parser.parse_args()
 
     os.environ["WANDB_SILENT"] = "true"
-    log_file = f'inference_{args.model}_{args.engine}.log'.replace("JonasNasimzada/", "")
+    log_file = f'inference_{args.model}_{args.engine}.log'.replace("JonasNasimzada/", "").replace("/", "_")
     sys.stdout = open(log_file, 'w')
 
     # WandB initialization
@@ -214,7 +214,7 @@ if __name__ == "__main__":
             "stockfish_skill": 0,
             "stockfish_hash": 2048,
             "stockfish_threads": 1,
-            "max_games": 100,
+            "max_games": args.max_games,
             "engine": args.engine,
         }
     )
@@ -233,10 +233,10 @@ if __name__ == "__main__":
         chat_template="llama-3.1"
     )
     stockfish_agent = Stockfish(
-        "../stockfish-ubuntu-x86-64-avx2",
+        args.stockfish,
         parameters={
             "Skill Level": config.stockfish_skill,
-            "Debug Log File": f"./stockfish_debug_{args.model}_{args.engine}.log".replace("JonasNasimzada/", ""),
+            "Debug Log File": f"./stockfish_debug_{args.model}_{args.engine}.log".replace("JonasNasimzada/", "").replace("/", "_"),
             "Hash": config.stockfish_hash,
             "Threads": config.stockfish_threads,
         }
