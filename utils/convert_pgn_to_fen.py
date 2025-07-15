@@ -89,5 +89,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    INPUT_PGN_FILE = "../data_chess/LumbrasGigaBase_OTB_2025.pgn"
     extract_all_fens_from_pgn(args.data, args.output, args.size)
