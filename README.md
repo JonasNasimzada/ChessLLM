@@ -34,7 +34,7 @@
 
 ## Download the Stockfish binary
 
-Download the Stockfish binary for your system from the [official repository](https://stockfishchess.org/download/).:
+Download the Stockfish binary for your system from the [official repository](https://stockfishchess.org/download/):
 
 After downloading, unpack it with:
 
