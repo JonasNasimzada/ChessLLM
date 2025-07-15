@@ -10,6 +10,12 @@
 └── inference_llm.py            # Inference-time move generation using fine-tuned language model
 ```
 
+Run supervised fine-tuning of the LLM with 4 GPUs in DDP:
+```cmd
+accelerate launch --config_file utils/accelerate_multi_gpu.yaml finetune_llm.py
+```
+
+
 ## Install Environment
 
 `conda create -n chessllm python=3.10 -y`
@@ -39,6 +45,6 @@ Download the Stockfish binary for your system from the [official repository](htt
 After downloading, unpack it with:
 
 ```bash
-tar -xvf stockfish-ubuntu-x86-64-avx2.tar.gz
+tar -xvf <stockfish>.tar.gz
 ```
 

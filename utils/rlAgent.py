@@ -19,6 +19,7 @@ class RLAgent:
         optimizer (torch.optim.Optimizer): The optimizer for training the policy network.
         lr (float): Learning rate for the optimizer. Default is 1e-3.
     """
+
     def __init__(self, policy, optimizer, lr=1e-3):
         self.policy_net = policy
         self.optimizer = optimizer(self.policy_net.parameters(), lr=lr)
@@ -107,6 +108,7 @@ class SimpleAgent(RLAgent):
     A simple reinforcement learning agent that accumulates immediate loss
     based on material evaluation differences between board states.
     """
+
     def __init__(self, policy, optimizer):
         super().__init__(policy, optimizer)
 
@@ -131,6 +133,7 @@ class PiecewiseAgent(RLAgent):
     A reinforcement learning agent that accumulates immediate loss based on
     piecewise rewards for captured and lost pieces.
     """
+
     def __init__(self, policy, optimizer):
         super().__init__(policy, optimizer)
         self.immediate_reward = 0.0  # Stores the immediate reward for the current move.
