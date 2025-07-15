@@ -16,7 +16,6 @@ from utils.stockfish import StockfishAgent
 
 from utils.encoding import isolate_move_notation
 
-sys.stdout = open('inference.log', 'w')
 # Initialize device
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -199,14 +198,17 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('--model', type=str, default='JonasNasimzada/Llama-3.2-3B-Instruct', )
     parser.add_argument('--engine', choices=['stockfish', 'minmax'], default='stockfish', )
     args = parser.parse_args()
+
+    sys.stdout = open(f'inference_{args.model}_{args.engine}.log', 'w')
 
     # WandB initialization
     wandb.init(
         project="chess_engine_evaluation",
         config={
-            "model_name": "JonasNasimzada/Llama-3.2-3B-Instruct",
+            "model_name": args.model,
             "stockfish_skill": 0,
             "stockfish_hash": 2048,
             "stockfish_threads": 1,
@@ -232,7 +234,7 @@ if __name__ == "__main__":
         "../stockfish-ubuntu-x86-64-avx2",
         parameters={
             "Skill Level": config.stockfish_skill,
-            "Debug Log File": "./stockfish_debug.log",
+            "Debug Log File": f"./stockfish_debug_{args.model}_{args.engine}.log",
             "Hash": config.stockfish_hash,
             "Threads": config.stockfish_threads,
         }
