@@ -39,6 +39,9 @@ def engine_make_move(current_board, past_fen_moves, engine="stockfish"):
             for i in range(2):
                 current_board.pop()
                 past_fen_moves.pop()
+            if not past_fen_moves:
+                print("No past moves to reset to, exiting.")
+                return True
             set_moves_back = True
 
         fen = current_board.fen()
