@@ -47,23 +47,22 @@ def engine_make_move(current_board, past_fen_moves, engine="stockfish"):
         bool: True if the board state was reset due to invalid moves, False otherwise.
     """
     set_moves_back = False
-    if engine == "stockfish":
-        if not current_board.is_valid():
-            print("Invalid board state, resetting last two moves.")
-            for i in range(2):
-                current_board.pop()
-                past_fen_moves.pop()
-            if not past_fen_moves:
-                print("No past moves to reset to, exiting.")
-                return True
-            set_moves_back = True
+    if not current_board.is_valid():
+        print("Invalid board state, resetting last two moves.")
+        for i in range(2):
+            current_board.pop()
+            past_fen_moves.pop()
+        if not past_fen_moves:
+            print("No past moves to reset to, exiting.")
+            return True
+        set_moves_back = True
 
+    if engine == "stockfish":
         fen = current_board.fen()
         past_fen_moves.append(fen)
         stockfish_agent.set_fen_position(fen)
         move = stockfish_agent.get_best_move()
         move = chess.Move.from_uci(move)
-
     elif engine == "minmax":
         engine = ClassicalAgent(depth=3)
         move = engine.get_move(board=current_board)

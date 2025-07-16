@@ -4,8 +4,8 @@
 ```
 .
 ├── pretrain_transformer.py     # Supervised pre-training for transformer policy network
-├── ppo_transformer.py          # RL fine-tuning of transformer policy (episodic training; W&B logging)
-├── train_grpo.py               # GRPO prompt generation and dataset creation for LLM fine-tuning
+├── train_ppo_transformer.py    # RL fine-tuning of transformer policy (episodic training; W&B logging)
+├── train_grpo_llm.py           # GRPO prompt generation and dataset creation for LLM fine-tuning
 ├── inference_transformer.py    # Inference-time move selection using trained transformer policy
 └── inference_llm.py            # Inference-time move generation using fine-tuned language model
 ```
