@@ -69,6 +69,7 @@ def engine_make_move(current_board, past_fen_moves, engine="stockfish"):
         engine = ClassicalAgent(depth=3)
         move = engine.get_move(board=current_board)
 
+    print(move)
     current_board.push(move)
     return set_moves_back
 
@@ -142,7 +143,7 @@ def rl_make_move(current_board, past_moves):
     })
 
 
-def play_chess(engine="stockfish"):
+def play_chess(engine="stockfish", side="random"):
     """
     Plays a series of chess games between the RL agent and the specified engine.
 
@@ -166,7 +167,13 @@ def play_chess(engine="stockfish"):
         # Log game start
         wandb.log({"game_id": game_count})
 
-        is_rl_agent_white = chess.WHITE if random.choice([True, False]) else chess.BLACK
+        is_rl_agent_white = None
+        if side == "random":
+            is_rl_agent_white = chess.WHITE if random.choice([True, False]) else chess.BLACK
+        elif side == "white":
+            is_rl_agent_white = chess.WHITE
+        elif side == "black":
+            is_rl_agent_white = chess.BLACK
         retry_count = 0
         while not board.is_game_over():
             amount_moves += 1
@@ -238,9 +245,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, default='JonasNasimzada/Llama-3.2-3B-Instruct', )
     parser.add_argument('--engine', choices=['stockfish', 'minmax'], default='stockfish', )
-    parser.add_argument('--stockfish', type=int, default="../stockfish-ubuntu-x86-64-avx2",
+    parser.add_argument('--stockfish', type=int, default="../stockfish-ubuntu-x86-64-avx2", required=False,
                         help='Path to stockfish binary')
     parser.add_argument('--max_games', type=int, required=False, default=100)
+    parser.add_argument('--side', choices=["random", "black", "white"], required=False, default="random")
     args = parser.parse_args()
 
     os.environ["WANDB_SILENT"] = "true"
@@ -257,6 +265,7 @@ if __name__ == "__main__":
             "stockfish_threads": 1,
             "max_games": args.max_games,
             "engine": args.engine,
+            "side": args.side,
         }
     )
     config = wandb.config
@@ -283,4 +292,4 @@ if __name__ == "__main__":
             "Threads": config.stockfish_threads,
         }
     )
-    play_chess(engine=args.engine)
+    play_chess(engine=args.engine, side=args.side)
