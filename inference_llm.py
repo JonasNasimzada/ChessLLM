@@ -245,7 +245,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, default='JonasNasimzada/Llama-3.2-3B-Instruct', )
     parser.add_argument('--engine', choices=['stockfish', 'minmax'], default='stockfish', )
-    parser.add_argument('--stockfish', type=int, default="../stockfish-ubuntu-x86-64-avx2", required=False,
+    parser.add_argument('--stockfish', type=str, default="../stockfish-ubuntu-x86-64-avx2", required=False,
                         help='Path to stockfish binary')
     parser.add_argument('--max_games', type=int, required=False, default=100)
     parser.add_argument('--side', choices=["random", "black", "white"], required=False, default="random")
