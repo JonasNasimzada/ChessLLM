@@ -270,7 +270,7 @@ if __name__ == "__main__":
     # Load model & tokenizer
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=config.model_name,
-        max_seq_length=2048,
+        max_seq_length=16,
         load_in_4bit=True,
     )
     FastLanguageModel.for_inference(model)
