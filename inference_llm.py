@@ -286,8 +286,9 @@ if __name__ == "__main__":
         args.stockfish,
         parameters={
             "Skill Level": config.stockfish_skill,
-            "Debug Log File": f"./stockfish_debug_{args.model}_{args.engine}.log".replace("JonasNasimzada/",
-                                                                                          "").replace("/", "_"),
+            "Debug Log File": f"./stockfish_debug_{args.model}_{args.engine}_{args.side}.log".replace("JonasNasimzada/",
+                                                                                                      "").replace("/",
+                                                                                                                  "_"),
             "Hash": config.stockfish_hash,
             "Threads": config.stockfish_threads,
         }
