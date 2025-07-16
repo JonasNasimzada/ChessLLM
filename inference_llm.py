@@ -247,15 +247,14 @@ if __name__ == "__main__":
                         help='Path to stockfish binary')
     parser.add_argument('--max_games', type=int, required=False, default=100)
     parser.add_argument('--side', choices=["random", "black", "white"], required=False, default="random")
+    parser.add_argument('--wandb', type=str, required=False, default="chess_engine_evaluation")
     args = parser.parse_args()
 
     os.environ["WANDB_SILENT"] = "true"
-    log_file = f'inference_{args.model}_{args.engine}.log'.replace("JonasNasimzada/", "").replace("/", "_")
-    # sys.stdout = open(log_file, 'w')
 
     # WandB initialization
     wandb.init(
-        project="chess_engine_evaluation_final",
+        project=args.wandb,
         config={
             "model_name": args.model,
             "stockfish_skill": 0,
