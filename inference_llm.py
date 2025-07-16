@@ -49,12 +49,12 @@ def engine_make_move(current_board, past_fen_moves, engine="stockfish"):
     set_moves_back = False
     if not current_board.is_valid():
         print("Invalid board state, resetting last two moves.")
-        for i in range(2):
-            current_board.pop()
-            past_fen_moves.pop()
         if not past_fen_moves:
             print("No past moves to reset to, exiting.")
             return True
+        for i in range(2):
+            current_board.pop()
+            past_fen_moves.pop()
         set_moves_back = True
 
     if engine == "stockfish":
@@ -258,7 +258,7 @@ if __name__ == "__main__":
         config={
             "model_name": args.model,
             "stockfish_skill": 0,
-            "stockfish_hash": 8,
+            "stockfish_hash": 16,
             "stockfish_threads": 1,
             "max_games": args.max_games,
             "engine": args.engine,
