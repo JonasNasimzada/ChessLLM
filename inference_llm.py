@@ -253,11 +253,11 @@ if __name__ == "__main__":
 
     os.environ["WANDB_SILENT"] = "true"
     log_file = f'inference_{args.model}_{args.engine}.log'.replace("JonasNasimzada/", "").replace("/", "_")
-    sys.stdout = open(log_file, 'w')
+    # sys.stdout = open(log_file, 'w')
 
     # WandB initialization
     wandb.init(
-        project="chess_engine_evaluation",
+        project="chess_engine_evaluation_final",
         config={
             "model_name": args.model,
             "stockfish_skill": 0,
