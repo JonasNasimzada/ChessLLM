@@ -61,7 +61,7 @@ def engine_make_move(current_board, past_fen_moves, engine="stockfish"):
         fen = current_board.fen()
         past_fen_moves.append(fen)
         stockfish_agent.set_fen_position(fen)
-        move = stockfish_agent.get_best_move()
+        move = stockfish_agent.get_best_move_time(100)
         move = chess.Move.from_uci(move)
     elif engine == "minmax":
         engine = ClassicalAgent(depth=3)
@@ -281,6 +281,7 @@ if __name__ == "__main__":
     )
     stockfish_agent = Stockfish(
         args.stockfish,
+        depth=1,
         parameters={
             "Skill Level": config.stockfish_skill,
             "Debug Log File": f"./stockfish_debug_{args.model}_{args.engine}_{args.side}.log".replace("JonasNasimzada/",
