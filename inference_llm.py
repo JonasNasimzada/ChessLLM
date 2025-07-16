@@ -258,7 +258,7 @@ if __name__ == "__main__":
         config={
             "model_name": args.model,
             "stockfish_skill": 0,
-            "stockfish_hash": 2048,
+            "stockfish_hash": 16,
             "stockfish_threads": 1,
             "max_games": args.max_games,
             "engine": args.engine,
@@ -270,7 +270,7 @@ if __name__ == "__main__":
     # Load model & tokenizer
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=config.model_name,
-        max_seq_length=16,
+        max_seq_length=2048,
         load_in_4bit=True,
     )
     FastLanguageModel.for_inference(model)
