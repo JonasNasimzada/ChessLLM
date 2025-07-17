@@ -217,6 +217,7 @@ def play_chess(engine="stockfish", side="random"):
                 retry_count += 1
                 amount_moves -= 2
                 if is_rl_turn:
+                    board.clear_stack()
                     continue
 
             if original_turn:
