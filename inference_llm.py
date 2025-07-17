@@ -258,7 +258,7 @@ if __name__ == "__main__":
         config={
             "model_name": args.model,
             "stockfish_skill": 0,
-            "stockfish_hash": 8,
+            "stockfish_hash": 4,
             "stockfish_threads": 1,
             "max_games": args.max_games,
             "engine": args.engine,
