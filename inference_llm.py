@@ -104,6 +104,28 @@ def generate_move(prompt):
     return move
 
 
+def generate_prompt(past_moves, current_board):
+    """
+    Generates a prompt for the RL agent based on past moves and the current board state.
+
+    Args:
+        past_moves (deque): A deque containing the FEN strings of past moves.
+        current_board (chess.Board): The current chess board state.
+
+    Returns:
+        list: A list of dictionaries representing the system and user messages.
+    """
+    return [
+        {"role": "system", "content": system_message},
+        {"role": "user", "content": user_message.format(
+            past_moves="\n".join(
+                "{}. {}".format(n, i) for n, i in enumerate(past_moves, start=1)
+            ) if past_moves else "no past moves",
+            current_move=current_board.fen()
+        )}
+    ]
+
+
 def rl_make_move(current_board, past_moves):
     """
     Makes a move using the RL agent and logs the move duration to WandB.
@@ -113,16 +135,7 @@ def rl_make_move(current_board, past_moves):
     start_time = time.time()
     retry = 0
     max_retries = 50
-    current_fen = current_board.fen()
-    prompt = [
-        {"role": "system", "content": system_message},
-        {"role": "user", "content": user_message.format(
-            past_moves="\n".join(
-                "{}. {}".format(n, i) for n, i in enumerate(past_moves, start=1)
-            ) if past_moves else "no past moves",
-            current_move=current_fen
-        )},
-    ]
+    prompt = generate_prompt(past_moves, current_board)
     move_str = generate_move(prompt)
     while True:
         try:
@@ -139,6 +152,7 @@ def rl_make_move(current_board, past_moves):
                     if past_moves:
                         past_moves.pop()
                 return True
+            prompt = generate_prompt(past_moves, current_board)
             move_str = generate_move(prompt)
     past_moves.append(current_board.fen())
     duration = time.time() - start_time
@@ -193,6 +207,7 @@ def play_chess(engine="stockfish", side="random"):
 
             if is_rl_turn:
                 set_back = rl_make_move(board, past_fen_moves)
+
                 agent = "RL Agent"
             else:
                 set_back = engine_make_move(board, past_fen_moves, engine=engine)
@@ -201,6 +216,8 @@ def play_chess(engine="stockfish", side="random"):
             if set_back:
                 retry_count += 1
                 amount_moves -= 2
+                if is_rl_turn:
+                    continue
 
             if original_turn:
                 white_agent = agent
