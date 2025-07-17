@@ -54,7 +54,8 @@ def engine_make_move(current_board, past_fen_moves, engine="stockfish"):
             return True
         for i in range(2):
             current_board.pop()
-            past_fen_moves.pop()
+            if past_fen_moves:
+                past_fen_moves.pop()
         set_moves_back = True
 
     if engine == "stockfish":
