@@ -107,12 +107,12 @@ def generate_move(prompt):
 def rl_make_move(current_board, past_moves):
     """
     Makes a move using the RL agent and logs the move duration to WandB.
-
-    Args:
-        current_board (chess.Board): The current chess board state.
-        past_moves (deque): A deque containing the FEN strings of past moves.
+    Returns:
+        bool: True if the board state was reset due to too many invalid RL move generations, False otherwise.
     """
     start_time = time.time()
+    retry = 0
+    max_retries = 50
     current_fen = current_board.fen()
     prompt = [
         {"role": "system", "content": system_message},
@@ -123,7 +123,6 @@ def rl_make_move(current_board, past_moves):
             current_move=current_fen
         )},
     ]
-
     move_str = generate_move(prompt)
     while True:
         try:
@@ -132,14 +131,22 @@ def rl_make_move(current_board, past_moves):
             past_moves.append(current_board.fen())
             break
         except Exception:
+            retry += 1
+            print(f"Invalid move generated, retrying... ({retry}/{max_retries})")
+            if retry >= max_retries:
+                print("Too many retries, resetting last two moves.")
+                for i in range(2):
+                    current_board.pop()
+                    if past_moves:
+                        past_moves.pop()
+                return True
             move_str = generate_move(prompt)
-            print("Invalid move generated, retrying...")
-
     duration = time.time() - start_time
     wandb.log({
         "move_time_rl": duration,
         "move_number": len(past_moves)
     })
+    return False
 
 
 def play_chess(engine="stockfish", side="random"):
@@ -185,14 +192,15 @@ def play_chess(engine="stockfish", side="random"):
             is_rl_turn = (original_turn and is_rl_agent_white) or (not original_turn and not is_rl_agent_white)
 
             if is_rl_turn:
-                rl_make_move(board, past_fen_moves)
+                set_back = rl_make_move(board, past_fen_moves)
                 agent = "RL Agent"
             else:
                 set_back = engine_make_move(board, past_fen_moves, engine=engine)
-                if set_back:
-                    retry_count += 1
-                    amount_moves -= 2
                 agent = "Stockfish Agent"
+
+            if set_back:
+                retry_count += 1
+                amount_moves -= 2
 
             if original_turn:
                 white_agent = agent
