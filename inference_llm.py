@@ -128,7 +128,6 @@ def rl_make_move(current_board, past_moves):
         try:
             move = chess.Move.from_uci(move_str)
             current_board.push(move)
-            past_moves.append(current_board.fen())
             break
         except Exception:
             retry += 1
@@ -141,6 +140,7 @@ def rl_make_move(current_board, past_moves):
                         past_moves.pop()
                 return True
             move_str = generate_move(prompt)
+    past_moves.append(current_board.fen())
     duration = time.time() - start_time
     wandb.log({
         "move_time_rl": duration,
