@@ -181,7 +181,7 @@ def play_chess(engine="stockfish", side="random"):
         elif side == "black":
             is_rl_agent_white = chess.BLACK
         retry_count = 0
-        while not board.is_game_over():
+        while not board.is_game_over(claim_draw=False):
             amount_moves += 1
             if retry_count >= 50:
                 print("Too many retries, resetting game.")
