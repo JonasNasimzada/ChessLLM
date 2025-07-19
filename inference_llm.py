@@ -1,36 +1,38 @@
-"""
-This script implements a chess-playing engine that uses a combination of reinforcement learning (RL) and classical chess engines (e.g., Stockfish).
-It defines functions for making moves, generating moves using a language model, and playing chess games while logging results to Weights & Biases (WandB).
-"""
-from unsloth import FastLanguageModel
+"""This script implements a chess-playing engine that uses a combination of reinforcement learning (RL) and classical
+chess engines (e.g., Stockfish). It defines functions for making moves, generating moves using a language model,
+and playing chess games while logging results to Weights & Biases (WandB)."""
 import os
 import random
-import sys
 import time
 from collections import deque
 
 import chess
 import torch
+import wandb
 from stockfish import Stockfish
 from transformers import TextStreamer
+from unsloth import FastLanguageModel
 from unsloth.chat_templates import get_chat_template
 
-import wandb
 from utils.classicalAgent import ClassicalAgent
 from utils.encoding import isolate_move_notation
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # System message template for the RL agent
-system_message = """You are the world’s strongest chess engine. You will be given the full move-history in FEN notation followed by the current position in FEN. Your task is to think through the position step by step—evaluating piece placement, pawn structure, king safety, candidate moves and tactical motifs—and then output exactly one best move in UCI format.\n\nStep-by-step guide:\n1. Material count and piece activity\n2. Pawn structure and central control\n3. King safety for both sides\n4. Candidate moves (e.g. developing, challenging the bishop, castling)\n5. Tactical considerations (pins, forks, discovered attacks)\n6. Long-term strategic plans\n\nAfter reasoning, output only the best move in UCI format.Respond in the following format:
-<think>
-You should reason between these tags.
-</think>\n
-The resulting UCI move should be between <answer> </answer> tags\n
-Always use <think> </think> tags even if they are not necessary."""
+system_message = """You are the world’s strongest chess engine. You will be given the full move-history in FEN 
+notation followed by the current position in FEN. Your task is to think through the position step by step—evaluating 
+piece placement, pawn structure, king safety, candidate moves and tactical motifs—and then output exactly one best 
+move in UCI format.\n\nStep-by-step guide:\n1. Material count and piece activity\n2. Pawn structure and central 
+control\n3. King safety for both sides\n4. Candidate moves (e.g. developing, challenging the bishop, castling)\n5. 
+Tactical considerations (pins, forks, discovered attacks)\n6. Long-term strategic plans\n\nAfter reasoning, 
+output only the best move in UCI format.Respond in the following format: <think> You should reason between these 
+tags. </think>\n The resulting UCI move should be between <answer> </answer> tags\n Always use <think> </think> tags 
+even if they are not necessary."""
 
 # User message template for prompting the RL agent
-user_message = """Move history (in FEN):\n{past_moves}\n\nCurrent position (FEN):\n{current_move}\n\nWhat is the next best move in UCI format?"""
+user_message = """Move history (in FEN):\n{past_moves}\n\nCurrent position (FEN):\n{current_move}\n\nWhat is the next 
+best move in UCI format?"""
 user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is the next best move in UCI format?"""
 
 
@@ -51,9 +53,11 @@ def engine_make_move(current_board, past_fen_moves, engine="stockfish"):
         if past_fen_moves:
             for _ in range(2):
                 current_board.pop()
-                past_fen_moves.pop()
+                if past_fen_moves:
+                    past_fen_moves.pop()
         return True
 
+    move = None
     if engine == "stockfish":
         fen = current_board.fen()
         past_fen_moves.append(fen)
@@ -145,7 +149,8 @@ def rl_make_move(current_board, past_moves):
     print("Too many retries, resetting last two moves.")
     for _ in range(2):
         current_board.pop()
-        past_moves.pop()
+        if past_moves:
+            past_moves.pop()
     return True
 
 
@@ -158,8 +163,11 @@ def play_chess(engine="stockfish", side="random"):
     for game_count in range(1, config.max_games + 1):
         board = chess.Board()
         past_fen_moves = deque(maxlen=15)
+        max_retry_count = 50
         retry_count = 0
         amount_moves = 0
+        white_agent = None
+        black_agent = None
 
         print(f"Starting game {game_count}")
         wandb.log({"game_id": game_count})
@@ -172,7 +180,7 @@ def play_chess(engine="stockfish", side="random"):
 
         while not board.is_game_over(claim_draw=False):
             amount_moves += 1
-            if retry_count >= 50:
+            if retry_count >= max_retry_count:
                 print("Too many retries, resetting game.")
                 break
 
@@ -210,7 +218,8 @@ def play_chess(engine="stockfish", side="random"):
         wandb.log({"game_result": result_wandb, "total_moves": amount_moves})
 
     print(
-        f"Finished {config.max_games} games: RL wins: {total_rl_wins}, RL draws: {total_rl_draws}, RL losses: {total_rl_losses}")
+        f"Finished {config.max_games} games: RL wins: {total_rl_wins}, RL draws: {total_rl_draws}, "
+        f"RL losses: {total_rl_losses}")
     wandb.log({
         "summary_rl_wins": total_rl_wins,
         "summary_rl_draws": total_rl_draws,
