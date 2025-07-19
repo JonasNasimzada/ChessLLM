@@ -1,9 +1,14 @@
 # ChessLLM
-We explore whether Large Language Models can learn strategic chess play through language-based pattern recognition as an 
-alternative to traditional tree-search approaches. Our ChessLLM framework trains the Llama 3.2-3B to process chess positions 
-represented in Forsyth-Edwards Notation (FEN) and output moves in Universal Chess Interface (UCI) format. 
-The training procedure combines supervised fine-tuning on over one million chess moves from LumbrasGigaBase 
-with reinforcement learning via GRPO on more than 130,000 chess moves. To evaluate our model, we let it play against Stockfish and Recursive Minimax with Alpha–Beta.
+ChessLLM is a chess engine developed to investigate the potential of Large Language Models (LLMs) in strategic chess 
+play through linguistic pattern recognition. Based on the Llama 3.2-3B model, ChessLLM processes chess positions 
+described in Forsyth-Edwards Notation (FEN) and produces moves using the Universal Chess Interface (UCI) format.
+The framework integrates supervised fine-tuning on expert-level chess datasets with reinforcement learning methods, 
+specifically Group Relative Policy Optimization (GRPO). This combination aims to 
+enable the model to internalize both tactical and strategic chess principles, providing an alternative approach to 
+traditional chess engines based on tree-search algorithms.
+ChessLLM's performance was evaluated against baseline engines, achieving significant results, including a 98% win rate 
+against Stockfish at skill level 0.
+
 
 Model Pipeline: 
 
