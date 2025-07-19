@@ -89,6 +89,7 @@ if __name__ == "__main__":
     trainer.train()
 
     trainer.save_model()
+
     args.distributed_state.wait_for_everyone()
     full_model = trainer.model.merge_and_unload()
     full_model.save_pretrained("pretrained_chess_llm_full")
