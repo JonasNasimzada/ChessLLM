@@ -47,4 +47,9 @@ After downloading, unpack it with:
 ```bash
 tar -xvf <stockfish>.tar.gz
 ```
+## Dataset
+The [LumbrasGigaBase](https://lumbrasgigabase.com/en/download-in-pgn-format-en/) dataset is used.
 
+To extract the chess moves per game from the dataset, you can use the `utils/convert_pgn_to_fen.py` script provided in the repository.
+
+For converting the CSV file to prompts for the LLM, you can use the `utils/create_prompt_dataset.py` script.

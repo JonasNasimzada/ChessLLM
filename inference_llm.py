@@ -236,13 +236,16 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='JonasNasimzada/Llama-3.2-3B-Instruct', )
+    parser.add_argument('--model', type=str, default='JonasNasimzada/Llama-3.2-3B-Instruct',
+                        help="Model to use for RL agent")
     parser.add_argument('--engine', choices=['stockfish', 'minmax'], default='stockfish', )
     parser.add_argument('--stockfish', type=str, default="../stockfish-ubuntu-x86-64-avx2", required=False,
                         help='Path to stockfish binary')
-    parser.add_argument('--max_games', type=int, required=False, default=100)
-    parser.add_argument('--side', choices=["random", "black", "white"], required=False, default="random")
-    parser.add_argument('--wandb', type=str, required=False, default="chess_engine_evaluation")
+    parser.add_argument('--max_games', type=int, required=False, default=100, help="Maximum number of games to play")
+    parser.add_argument('--side', choices=["random", "black", "white"], required=False, default="random",
+                        help="Which side to play as (random, black, or white)")
+    parser.add_argument('--wandb', type=str, required=False, default="chess_engine_evaluation",
+                        help="WandB project name")
     args = parser.parse_args()
 
     os.environ["WANDB_SILENT"] = "true"

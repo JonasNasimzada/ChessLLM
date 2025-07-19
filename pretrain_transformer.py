@@ -212,7 +212,7 @@ def train_from_large_csv(csv_file: str,
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, required=True, help="Path to the dataset CSV file.")
-    parser.add_argument('--ckpt_dir', type=str, required=False, default="checkpoints/pretrain_transformer/v2",
+    parser.add_argument('--ckpt_dir', type=str, required=False, default="checkpoints/pretrain_transformer",
                         help="Directory to save model checkpoints.")
     args = parser.parse_args()
 

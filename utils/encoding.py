@@ -169,9 +169,8 @@ def isolate_fen_notation(prompt):
     Returns:
         str or None: The extracted FEN string, or None if not found.
     """
-    user_prompt = prompt[1]["content"]
     pattern = re.compile(FEN_REGEX, re.MULTILINE)
-    search = pattern.findall(user_prompt)
+    search = pattern.findall(prompt)
     if search:
         fen = search[-1]
         return fen

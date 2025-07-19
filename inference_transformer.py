@@ -99,7 +99,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', choices=['linear', 'plain_transformer', 'pretrained_transformer'], default='linear',
                         help='Model type to use for RL agent')
-    parser.add_argument('--ckpt', type=str, required=False, help='Path to the model checkpoint file')
+    parser.add_argument('--ckpt', type=str, required=False, help='Path to the model checkpoint file to load')
     parser.add_argument('--max_games', type=int, required=False, default=100, help='Maximum number of games to play')
     args = parser.parse_args()
 
