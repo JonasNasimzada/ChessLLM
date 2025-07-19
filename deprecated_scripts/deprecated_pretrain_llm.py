@@ -17,7 +17,6 @@ if __name__ == "__main__":
         device_map="auto",
         torch_dtype=torch.float16,
     )
-
     device_string = PartialState().process_index
 
     # BitsAndBytesConfig int-4 config
