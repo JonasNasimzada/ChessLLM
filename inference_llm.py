@@ -178,7 +178,7 @@ def play_chess(engine="stockfish", side="random"):
             "black": chess.BLACK
         }.get(side, chess.WHITE)
 
-        while not board.is_game_over(claim_draw=False):
+        while not board.is_game_over():
             amount_moves += 1
             if retry_count >= max_retry_count:
                 print("Too many retries, resetting game.")
@@ -205,6 +205,11 @@ def play_chess(engine="stockfish", side="random"):
                 black_agent = agent
 
         result = board.result()
+        if result == "*":
+            game_count -= 1
+            print(f"Resetting game due to insufficient moves.")
+            break
+
         print(f"Game {game_count} over: {result} with {amount_moves} moves. white: {white_agent}, black: {black_agent}")
         result_wandb = {"1-0": 1, "1/2-1/2": 0, "0-1": -1}.get(result, 0)
 
