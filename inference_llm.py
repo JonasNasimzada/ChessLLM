@@ -1,6 +1,7 @@
 """This script implements a chess-playing engine that uses a combination of reinforcement learning (RL) and classical
 chess engines (e.g., Stockfish). It defines functions for making moves, generating moves using a language model,
 and playing chess games while logging results to Weights & Biases (WandB)."""
+from unsloth import FastLanguageModel
 import os
 import random
 import time
@@ -11,7 +12,6 @@ import torch
 import wandb
 from stockfish import Stockfish
 from transformers import TextStreamer
-from unsloth import FastLanguageModel
 from unsloth.chat_templates import get_chat_template
 
 from utils.classicalAgent import ClassicalAgent
