@@ -46,31 +46,24 @@ def engine_make_move(current_board, past_fen_moves, engine="stockfish"):
     Returns:
         bool: True if the board state was reset due to invalid moves, False otherwise.
     """
-    set_moves_back = False
     if not current_board.is_valid():
         print("Invalid board state, resetting last two moves.")
-        if not past_fen_moves:
-            print("No past moves to reset to, exiting.")
-            return True
-        for i in range(2):
-            current_board.pop()
-            if past_fen_moves:
+        if past_fen_moves:
+            for _ in range(2):
+                current_board.pop()
                 past_fen_moves.pop()
-        set_moves_back = True
+        return True
 
     if engine == "stockfish":
         fen = current_board.fen()
         past_fen_moves.append(fen)
         stockfish_agent.set_fen_position(fen)
-        move = stockfish_agent.get_best_move_time(100)
-        move = chess.Move.from_uci(move)
+        move = chess.Move.from_uci(stockfish_agent.get_best_move_time(100))
     elif engine == "minmax":
-        engine = ClassicalAgent(depth=3)
-        move = engine.get_move(board=current_board)
+        move = ClassicalAgent(depth=3).get_move(board=current_board)
 
-    print(move)
     current_board.push(move)
-    return set_moves_back
+    return False
 
 
 def generate_move(prompt):
@@ -135,71 +128,52 @@ def rl_make_move(current_board, past_moves):
     start_time = time.time()
     retry = 0
     max_retries = 50
-    prompt = generate_prompt(past_moves, current_board)
-    move_str = generate_move(prompt)
-    while True:
+
+    while retry < max_retries:
+        prompt = generate_prompt(past_moves, current_board)
+        move_str = generate_move(prompt)
         try:
             move = chess.Move.from_uci(move_str)
             current_board.push(move)
-            break
-        except Exception:
+            past_moves.append(current_board.fen())
+            wandb.log({"rl_move_time": time.time() - start_time, "rl_move_number": len(past_moves)})
+            return False
+        except ValueError:
             retry += 1
             print(f"Invalid move generated, retrying... ({retry}/{max_retries})")
-            if retry >= max_retries:
-                print("Too many retries, resetting last two moves.")
-                for i in range(2):
-                    current_board.pop()
-                    if past_moves:
-                        past_moves.pop()
-                return True
-            prompt = generate_prompt(past_moves, current_board)
-            move_str = generate_move(prompt)
-    past_moves.append(current_board.fen())
-    duration = time.time() - start_time
-    wandb.log({
-        "move_time_rl": duration,
-        "move_number": len(past_moves)
-    })
-    return False
+
+    print("Too many retries, resetting last two moves.")
+    for _ in range(2):
+        current_board.pop()
+        past_moves.pop()
+    return True
 
 
 def play_chess(engine="stockfish", side="random"):
     """
     Plays a series of chess games between the RL agent and the specified engine.
-
-    Args:
-        engine (str): The engine to use for the opponent ("stockfish" or "minmax").
     """
-    game_count = 0
-    total_rl_wins = 0
-    total_rl_draws = 0
-    total_rl_losses = 0
+    total_rl_wins, total_rl_draws, total_rl_losses = 0, 0, 0
 
-    board = chess.Board()
-    while game_count < config.max_games:
-        board.reset()
-        game_count += 1
-        amount_moves = 0
+    for game_count in range(1, config.max_games + 1):
+        board = chess.Board()
         past_fen_moves = deque(maxlen=15)
+        retry_count = 0
+        amount_moves = 0
+
         print(f"Starting game {game_count}")
-        white_agent = None
-        black_agent = None
-        # Log game start
         wandb.log({"game_id": game_count})
 
-        is_rl_agent_white = None
-        if side == "random":
-            is_rl_agent_white = chess.WHITE if random.choice([True, False]) else chess.BLACK
-        elif side == "white":
-            is_rl_agent_white = chess.WHITE
-        elif side == "black":
-            is_rl_agent_white = chess.BLACK
-        retry_count = 0
+        is_rl_agent_white = {
+            "random": random.choice([chess.WHITE, chess.BLACK]),
+            "white": chess.WHITE,
+            "black": chess.BLACK
+        }.get(side, chess.WHITE)
+
         while not board.is_game_over(claim_draw=False):
             amount_moves += 1
             if retry_count >= 50:
                 print("Too many retries, resetting game.")
-                game_count -= 1
                 break
 
             original_turn = board.turn
@@ -207,7 +181,6 @@ def play_chess(engine="stockfish", side="random"):
 
             if is_rl_turn:
                 set_back = rl_make_move(board, past_fen_moves)
-
                 agent = "RL Agent"
             else:
                 set_back = engine_make_move(board, past_fen_moves, engine=engine)
@@ -216,9 +189,7 @@ def play_chess(engine="stockfish", side="random"):
             if set_back:
                 retry_count += 1
                 amount_moves -= 2
-                if is_rl_turn:
-                    board.clear_stack()
-                    continue
+                continue
 
             if original_turn:
                 white_agent = agent
@@ -226,37 +197,20 @@ def play_chess(engine="stockfish", side="random"):
                 black_agent = agent
 
         result = board.result()
-        print(
-            f"Game {game_count} over: {result} with {amount_moves} moves. white: {white_agent}, black: {black_agent}"
-        )
-        result_wandb = 0
+        print(f"Game {game_count} over: {result} with {amount_moves} moves. white: {white_agent}, black: {black_agent}")
+        result_wandb = {"1-0": 1, "1/2-1/2": 0, "0-1": -1}.get(result, 0)
 
-        # Track RL agent wins
-        if (result == "1-0" and is_rl_agent_white) or (result == "0-1" and not is_rl_agent_white):
+        if result_wandb == 1:
             total_rl_wins += 1
-            result_wandb = 1
-        # Track RL agent draws
-        if result == "1/2-1/2":
+        elif result_wandb == 0:
             total_rl_draws += 1
-            result_wandb = 0
-        # Track RL agent losses
-        if (result == "0-1" and is_rl_agent_white) or (result == "1-0" and not is_rl_agent_white):
+        elif result_wandb == -1:
             total_rl_losses += 1
-            result_wandb = -1
 
-        # Log game results
-        wandb.log({
-            "game_result": result_wandb,
-            "total_moves": amount_moves,
-        })
-    # Print summary statistics
+        wandb.log({"game_result": result_wandb, "total_moves": amount_moves})
+
     print(
-        f"Finished {config.max_games} games: "
-        f"RL wins: {total_rl_wins}, "
-        f"RL draws: {total_rl_draws}, "
-        f"RL losses: {total_rl_losses}"
-    )
-    # Log summary stats to WandB
+        f"Finished {config.max_games} games: RL wins: {total_rl_wins}, RL draws: {total_rl_draws}, RL losses: {total_rl_losses}")
     wandb.log({
         "summary_rl_wins": total_rl_wins,
         "summary_rl_draws": total_rl_draws,
