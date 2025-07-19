@@ -208,7 +208,7 @@ def play_chess(engine="stockfish", side="random"):
         if result == "*":
             game_count -= 1
             print(f"Resetting game due to insufficient moves.")
-            break
+            continue
 
         print(f"Game {game_count} over: {result} with {amount_moves} moves. white: {white_agent}, black: {black_agent}")
         result_wandb = {"1-0": 1, "1/2-1/2": 0, "0-1": -1}.get(result, 0)
