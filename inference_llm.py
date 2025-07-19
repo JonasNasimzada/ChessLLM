@@ -138,7 +138,7 @@ def rl_make_move(current_board, past_moves):
             past_moves.append(current_board.fen())
             wandb.log({"rl_move_time": time.time() - start_time, "rl_move_number": len(past_moves)})
             return False
-        except ValueError:
+        except Exception:
             retry += 1
             print(f"Invalid move generated, retrying... ({retry}/{max_retries})")
 
