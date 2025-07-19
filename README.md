@@ -16,6 +16,7 @@ against Stockfish at skill level 0.
 ## Overview
 ```
 .
+├── finetune_llm.py             # Supervised fine-tuning of LLM 
 ├── pretrain_transformer.py     # Supervised pre-training for transformer policy network
 ├── train_ppo_transformer.py    # RL fine-tuning of transformer policy (episodic training; W&B logging)
 ├── train_grpo_llm.py           # GRPO prompt generation and dataset creation for LLM fine-tuning

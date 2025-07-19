@@ -12,7 +12,6 @@ Always use <think> </think> tags even if they are not necessary."""
 
 # User message template for generating the next best move
 user_message = """Move history (in FEN):\n{past_moves}\n\nCurrent position (FEN):\n{current_move}\n\nWhat is the next best move in UCI format?"""
-user_message_no_context = """Current position (FEN):\n{current_move}\n\nWhat is the next best move in UCI format?"""
 
 if __name__ == "__main__":
     """
@@ -41,7 +40,6 @@ if __name__ == "__main__":
         "--output",
         type=str,
         default="train_dataset.json",
-        required=True,
         help="Path to save the processed dataset in JSON format."
     )
 
@@ -67,23 +65,26 @@ if __name__ == "__main__":
         Returns:
             dict: A formatted instruction dictionary with system and user messages, and the answer.
         """
-        name = None
-        user = ""
+        instruction = {}
         if args.type == "finetune":
-            name = "messages"
+            instruction = {
+                "messages": [
+                    {"role": "system", "content": system_message},
+                    {"role": "user",
+                     "content": user_message.format(past_moves=sample["context"], current_move=sample["fen"])},
+                    {"role": "assistant", "content": sample["move"]}
+                ]
+            }
         elif args.type == "grpo":
-            user = {"role": "user", "content": user_message_no_context.format(current_move=sample["fen"])},
-            name = "prompt"
+            instruction = {
+                "prompt": [
+                    {"role": "system", "content": system_message},
+                    {"role": "user",
+                     "content": user_message.format(past_moves=sample["context"], current_move=sample["fen"])}
+                ],
+                "answer": sample["move"]
+            }
 
-        instruction = {
-            name: [
-                {"role": "system", "content": system_message},
-                {"role": "user",
-                 "content": user_message.format(past_moves=sample["context"], current_move=sample["fen"])},
-                user
-            ],
-            "answer": sample["move"] if args.type == "finetune" else ""
-        }
         return instruction
 
 
@@ -111,7 +112,7 @@ if __name__ == "__main__":
     ds = ds.add_column("context", contexts)
 
     # Map the dataset to the instruction format
-    dataset = ds.map(instruction_format, remove_columns=ds.column_names)
+    dataset = ds.map(instruction_format, remove_columns=ds.column_names, )
 
     # Save the processed dataset to a JSON file
     dataset.to_json(args.output, orient="records")
