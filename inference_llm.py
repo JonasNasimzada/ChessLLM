@@ -181,6 +181,7 @@ def play_chess(engine="stockfish", side="random"):
         while not board.is_game_over():
             amount_moves += 1
             if retry_count >= max_retry_count:
+                game_count -= 1
                 print("Too many retries, resetting game.")
                 break
 
