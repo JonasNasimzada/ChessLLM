@@ -237,57 +237,63 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='JonasNasimzada/Llama-3.2-3B-Instruct',
+    parser.add_argument('--model', type=str,
+                        default='JonasNasimzada/llama-3.2-3b-chess_grpo_win_draw_loss_material_advantage',
                         help="Model to use for RL agent")
     parser.add_argument('--engine', choices=['stockfish', 'minmax'], default='stockfish', )
     parser.add_argument('--stockfish', type=str, default="../stockfish-ubuntu-x86-64-avx2", required=False,
                         help='Path to stockfish binary')
+    parser.add_argument('--stockfish_skill', type=int, default=0, required=False, help='Skill level of Stockfish')
     parser.add_argument('--max_games', type=int, required=False, default=100, help="Maximum number of games to play")
     parser.add_argument('--side', choices=["random", "black", "white"], required=False, default="random",
                         help="Which side to play as (random, black, or white)")
     parser.add_argument('--wandb', type=str, required=False, default="chess_engine_evaluation",
                         help="WandB project name")
+    parser.add_argument('--batch', type=int, required=False, default=1, help="Batch size for RL agent")
     args = parser.parse_args()
 
     os.environ["WANDB_SILENT"] = "true"
 
-    # WandB initialization
-    wandb.init(
-        project=args.wandb,
-        config={
-            "model_name": args.model,
-            "stockfish_skill": 0,
-            "stockfish_hash": 8,
-            "stockfish_threads": 1,
-            "max_games": args.max_games,
-            "engine": args.engine,
-            "side": args.side,
-        }
-    )
-    config = wandb.config
+    for i in range(args.batch):
+        # WandB initialization
+        wandb.init(
+            project=args.wandb,
+            config={
+                "model_name": args.model,
+                "stockfish_skill": args.stockfish_skill,
+                "stockfish_hash": 8,
+                "stockfish_threads": 1,
+                "max_games": args.max_games,
+                "engine": args.engine,
+                "side": args.side,
+            }
+        )
+        config = wandb.config
 
-    # Load model & tokenizer
-    model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name=config.model_name,
-        max_seq_length=2048,
-        load_in_4bit=True,
-    )
-    FastLanguageModel.for_inference(model)
+        # Load model & tokenizer
+        model, tokenizer = FastLanguageModel.from_pretrained(
+            model_name=config.model_name,
+            max_seq_length=2048,
+            load_in_4bit=True,
+        )
+        FastLanguageModel.for_inference(model)
 
-    tokenizer = get_chat_template(
-        tokenizer,
-        chat_template="llama-3.1"
-    )
-    stockfish_agent = Stockfish(
-        args.stockfish,
-        depth=1,
-        parameters={
-            "Skill Level": config.stockfish_skill,
-            "Debug Log File": f"./stockfish_debug_{args.model}_{args.engine}_{args.side}.log".replace("JonasNasimzada/",
-                                                                                                      "").replace("/",
-                                                                                                                  "_"),
-            "Hash": config.stockfish_hash,
-            "Threads": config.stockfish_threads,
-        }
-    )
-    play_chess(engine=args.engine, side=args.side)
+        tokenizer = get_chat_template(
+            tokenizer,
+            chat_template="llama-3.1"
+        )
+        stockfish_agent = Stockfish(
+            args.stockfish,
+            depth=1,
+            parameters={
+                "Skill Level": config.stockfish_skill,
+                "Debug Log File": f"./stockfish_debug_{args.model}_{args.engine}_{args.side}.log".replace(
+                    "JonasNasimzada/",
+                    "").replace("/",
+                                "_"),
+                "Hash": config.stockfish_hash,
+                "Threads": config.stockfish_threads,
+            }
+        )
+        play_chess(engine=args.engine, side=args.side)
+        wandb.finish(exit_code=0, )
