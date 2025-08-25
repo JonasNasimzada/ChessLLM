@@ -212,7 +212,11 @@ def play_chess(engine="stockfish", side="random"):
             continue
 
         print(f"Game {game_count} over: {result} with {amount_moves} moves. white: {white_agent}, black: {black_agent}")
-        result_wandb = {"1-0": 1, "1/2-1/2": 0, "0-1": -1}.get(result, 0)
+        if is_rl_agent_white:
+            result_map = {"1-0": 1, "1/2-1/2": 0, "0-1": -1}  # White win = RL win
+        else:
+            result_map = {"1-0": -1, "1/2-1/2": 0, "0-1": 1}  # Black win = RL win
+        result_wandb = result_map.get(result, 0)
 
         if result_wandb == 1:
             total_rl_wins += 1
@@ -284,15 +288,15 @@ if __name__ == "__main__":
         )
         stockfish_agent = Stockfish(
             args.stockfish,
-            #depth=1,
+            depth=1,
             parameters={
                 "Skill Level": config.stockfish_skill,
                 "Debug Log File": f"./stockfish_debug_{args.model}_{args.engine}_{args.side}.log".replace(
                     "JonasNasimzada/",
                     "").replace("/",
                                 "_"),
-                # "Hash": config.stockfish_hash,
-                # "Threads": config.stockfish_threads,
+                "Hash": config.stockfish_hash,
+                "Threads": config.stockfish_threads,
             }
         )
         play_chess(engine=args.engine, side=args.side)
