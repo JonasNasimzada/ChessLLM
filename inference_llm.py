@@ -284,15 +284,15 @@ if __name__ == "__main__":
         )
         stockfish_agent = Stockfish(
             args.stockfish,
-            depth=1,
+            #depth=1,
             parameters={
                 "Skill Level": config.stockfish_skill,
                 "Debug Log File": f"./stockfish_debug_{args.model}_{args.engine}_{args.side}.log".replace(
                     "JonasNasimzada/",
                     "").replace("/",
                                 "_"),
-                #"Hash": config.stockfish_hash,
-                #"Threads": config.stockfish_threads,
+                # "Hash": config.stockfish_hash,
+                # "Threads": config.stockfish_threads,
             }
         )
         play_chess(engine=args.engine, side=args.side)
