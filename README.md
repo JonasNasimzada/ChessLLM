@@ -55,7 +55,7 @@ The trained LLMs are available on Hugging Face:
 
 #### Additional packages for finetuning & reinforcement learning the LLM
 
-`pip install unsloth transformers datasets accelerate evaluate sentencepiece protobuf tiktoken trl peft importlib-metadata vllm`
+`pip install unsloth transformers datasets accelerate evaluate sentencepiece protobuf tiktoken trl peft importlib-metadata vllm bitsandbytes`
 
 #### Optional packages for training the LLM with FlashAttention for faster training
 

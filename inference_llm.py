@@ -291,8 +291,8 @@ if __name__ == "__main__":
                     "JonasNasimzada/",
                     "").replace("/",
                                 "_"),
-                "Hash": config.stockfish_hash,
-                "Threads": config.stockfish_threads,
+                #"Hash": config.stockfish_hash,
+                #"Threads": config.stockfish_threads,
             }
         )
         play_chess(engine=args.engine, side=args.side)
