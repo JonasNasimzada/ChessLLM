@@ -13,28 +13,6 @@ from transformers import DataCollatorForSeq2Seq
 from trl import SFTTrainer, SFTConfig
 from unsloth.chat_templates import get_chat_template, train_on_responses_only
 
-
-def formatting_prompts_func(examples):
-    """
-    Map function to format dataset examples by applying chat template.
-
-    Args:
-        examples (dict): Batch of examples with key "messages".
-
-    Returns:
-        dict: Batch with new key "text" containing formatted strings.
-    """
-    convos = examples["messages"]
-    texts = [
-        tokenizer.apply_chat_template(
-            convo,
-            tokenize=False,
-            add_generation_prompt=False
-        )
-        for convo in convos
-    ]
-    return {"text": texts}
-
 if __name__ == "__main__":
     # Parse command-line arguments for model, output paths, and dataset
     parser = argparse.ArgumentParser()
@@ -73,13 +51,7 @@ if __name__ == "__main__":
     load_in_4bit = True  # Load model in 4-bit precision
     device_string = PartialState().process_index  # Device mapping index
 
-    # Load dataset and apply formatting function
     dataset = load_dataset("json", data_files=args.dataset, split="train")
-    dataset = dataset.map(formatting_prompts_func, batched=True)
-
-    # Display sample for verification
-    print(dataset[5]["messages"])
-    print(dataset[5]["text"])
 
     max_prompt_length = max(dataset.map(
         lambda x: {"tokens": tokenizer.apply_chat_template(x["prompt"], add_generation_prompt=True, tokenize=True)},
@@ -94,6 +66,36 @@ if __name__ == "__main__":
         load_in_4bit=load_in_4bit,
         device_map={"": device_string}
     )
+
+    def formatting_prompts_func(examples):
+        """
+        Map function to format dataset examples by applying chat template.
+
+        Args:
+            examples (dict): Batch of examples with key "messages".
+
+        Returns:
+            dict: Batch with new key "text" containing formatted strings.
+        """
+        convos = examples["messages"]
+        texts = [
+            tokenizer.apply_chat_template(
+                convo,
+                tokenize=False,
+                add_generation_prompt=False
+            )
+            for convo in convos
+        ]
+        return {"text": texts}
+
+
+    # Load dataset and apply formatting function
+
+    dataset = dataset.map(formatting_prompts_func, batched=True)
+
+    # Display sample for verification
+    print(dataset[5]["messages"])
+    print(dataset[5]["text"])
 
     # Apply PEFT (LoRA) to model for parameter-efficient fine-tuning
     model = FastLanguageModel.get_peft_model(
