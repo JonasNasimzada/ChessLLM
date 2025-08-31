@@ -5,13 +5,35 @@ formats the dataset with a chat template, and trains with `SFTTrainer`.
 Finally, it saves and pushes the fine-tuned model and tokenizer to the hub.
 """
 
+from unsloth import FastLanguageModel
 import argparse
 from accelerate import PartialState
 from datasets import load_dataset
 from transformers import DataCollatorForSeq2Seq
 from trl import SFTTrainer, SFTConfig
-from unsloth import FastLanguageModel
 from unsloth.chat_templates import get_chat_template, train_on_responses_only
+
+
+def formatting_prompts_func(examples):
+    """
+    Map function to format dataset examples by applying chat template.
+
+    Args:
+        examples (dict): Batch of examples with key "messages".
+
+    Returns:
+        dict: Batch with new key "text" containing formatted strings.
+    """
+    convos = examples["messages"]
+    texts = [
+        tokenizer.apply_chat_template(
+            convo,
+            tokenize=False,
+            add_generation_prompt=False
+        )
+        for convo in convos
+    ]
+    return {"text": texts}
 
 if __name__ == "__main__":
     # Parse command-line arguments for model, output paths, and dataset
@@ -47,15 +69,27 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Training configuration
-    max_seq_length = 2048  # Maximum sequence length
     dtype = None  # Data type (e.g., float16 or float32)
     load_in_4bit = True  # Load model in 4-bit precision
     device_string = PartialState().process_index  # Device mapping index
 
+    # Load dataset and apply formatting function
+    dataset = load_dataset("json", data_files=args.dataset, split="train")
+    dataset = dataset.map(formatting_prompts_func, batched=True)
+
+    # Display sample for verification
+    print(dataset[5]["messages"])
+    print(dataset[5]["text"])
+
+    max_prompt_length = max(dataset.map(
+        lambda x: {"tokens": tokenizer.apply_chat_template(x["prompt"], add_generation_prompt=True, tokenize=True)},
+        batched=True, ).map(lambda x: {"length": len(x["tokens"])})["length"]) + 1
+    print(f"Max prompt length: {max_prompt_length}")
+
     # Load pre-trained model and tokenizer
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=args.model,
-        max_seq_length=max_seq_length,
+        max_seq_length=max_prompt_length,
         dtype=dtype,
         load_in_4bit=load_in_4bit,
         device_map={"": device_string}
@@ -81,37 +115,6 @@ if __name__ == "__main__":
     # Wrap tokenizer with chat template for prompt formatting
     tokenizer = get_chat_template(tokenizer, chat_template="llama-3.1")
 
-
-    def formatting_prompts_func(examples):
-        """
-        Map function to format dataset examples by applying chat template.
-
-        Args:
-            examples (dict): Batch of examples with key "messages".
-
-        Returns:
-            dict: Batch with new key "text" containing formatted strings.
-        """
-        convos = examples["messages"]
-        texts = [
-            tokenizer.apply_chat_template(
-                convo,
-                tokenize=False,
-                add_generation_prompt=False
-            )
-            for convo in convos
-        ]
-        return {"text": texts}
-
-
-    # Load dataset and apply formatting function
-    dataset = load_dataset("json", data_files=args.dataset, split="train")
-    dataset = dataset.map(formatting_prompts_func, batched=True)
-
-    # Display sample for verification
-    print(dataset[5]["messages"])
-    print(dataset[5]["text"])
-
     # Initialize SFT trainer with training arguments
     trainer = SFTTrainer(
         model=model,
@@ -132,7 +135,7 @@ if __name__ == "__main__":
             output_dir=args.output,
             report_to="wandb",
             dataset_text_field="text",
-            max_seq_length=max_seq_length,
+            max_seq_length=max_prompt_length,
             dataset_num_proc=2,
             packing=False,
             ddp_find_unused_parameters=False,
