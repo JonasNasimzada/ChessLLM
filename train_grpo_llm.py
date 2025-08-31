@@ -10,11 +10,37 @@ import re
 
 import chess
 from datasets import load_dataset
+from stockfish import Stockfish
 from trl import GRPOConfig, GRPOTrainer
 from unsloth import FastLanguageModel
 
 from utils import encoding
 from utils.encoding import isolate_fen_notation, isolate_move_notation, UCI_REGEX
+
+
+def stockfish_reward(prompts, completions, **kwargs):
+    rewards = []
+    for prompt, completion in zip(prompts, completions):
+        fen = isolate_fen_notation(prompt[1]["content"])
+        chess_board = chess.Board(fen)
+        move_str = isolate_move_notation(completion[0]["content"])
+        if not move_str:
+            rewards.append(-10.0)
+            continue
+        try:
+            move = chess.Move.from_uci(move_str)
+            STOCKFISH.make_moves_from_current_position([move])
+            rating = STOCKFISH.get_evaluation()['value'] / 10.0
+        except chess.InvalidMoveError:
+            rewards.append(-10.0)
+            continue
+        try:
+            chess_board.push(move)
+        except AssertionError:
+            rewards.append(-10.0)
+            continue
+        rewards.append(rating)
+    return rewards
 
 
 def end_game_reward(prompts, completions, **kwargs):
@@ -173,6 +199,10 @@ if __name__ == "__main__":
                         help="Name of the new model to be saved and pushed to the hub.")
     parser.add_argument('--output', type=str, default='output/grpo', required=False,
                         help="Output directory for the fine-tuned model.")
+    parser.add_argument('--stockfish', type=str, default="../stockfish-ubuntu-x86-64-avx2", required=False,
+                        help='Path to stockfish binary')
+    parser.add_argument('--stockfish_skill', type=int, default=0, required=False, help='Skill level of Stockfish')
+
     args = parser.parse_args()
 
     # Model and tokenizer configuration
@@ -216,7 +246,7 @@ if __name__ == "__main__":
 
     # GRPO training configuration
     training_args = GRPOConfig(
-        learning_rate=5e-6,
+        learning_rate=2e-4,
         weight_decay=0.1,
         warmup_ratio=0.1,
         lr_scheduler_type="cosine",
@@ -244,11 +274,21 @@ if __name__ == "__main__":
         reward_funcs=[
             check_answer,
             end_game_reward,
-            piece_reward,
-            valid_uci_move_reward,
+            # piece_reward,
+            # valid_uci_move_reward,
+            stockfish_reward,
         ],
         args=training_args,
         train_dataset=dataset,
+    )
+
+    STOCKFISH = Stockfish(
+        args.stockfish,
+        parameters={
+            "Skill Level": args.stockfish_skill,
+            "Debug Log File": f"./stockfish_debug_{args.model}_{args.engine}_{args.side}.log".replace(
+                "JonasNasimzada/", "").replace("/", "_"),
+        }
     )
 
     # Train the model
