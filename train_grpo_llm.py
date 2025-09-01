@@ -197,7 +197,6 @@ if __name__ == "__main__":
     lora_rank = 64
 
     comp_cfg = CompilationConfig(
-        # pick a project path with plenty of space
         cache_dir="/hkfs/home/project/hk-project-pai00051/st_st171793/vllm_compile_cache",
         level=3,
         backend="inductor"
@@ -282,8 +281,6 @@ if __name__ == "__main__":
         args.stockfish,
         parameters={
             "Skill Level": args.stockfish_skill,
-            "Debug Log File": f"./stockfish_debug_{args.model}_{args.engine}_{args.side}.log".replace(
-                "JonasNasimzada/", "").replace("/", "_"),
         }
     )
 
