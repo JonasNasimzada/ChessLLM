@@ -6,6 +6,7 @@ The fine-tuned model is saved and optionally pushed to the Hugging Face model hu
 
 import argparse
 import copy
+import os
 import re
 
 import chess
@@ -191,6 +192,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    os.environ['HF_HOME'] = "/hkfs/home/project/hk-project-pai00051/st_st171793"
+
     # Model and tokenizer configuration
     max_seq_length = 2048
     lora_rank = 64
@@ -204,6 +207,7 @@ if __name__ == "__main__":
         max_lora_rank=lora_rank,
         gpu_memory_utilization=0.6,
         device_map='auto',
+
     )
 
     # Apply PEFT (LoRA) to the model
