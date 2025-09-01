@@ -4,7 +4,9 @@ It loads the model and tokenizer via `FastLanguageModel`, applies PEFT (LoRA),
 formats the dataset with a chat template, and trains with `SFTTrainer`.
 Finally, it saves and pushes the fine-tuned model and tokenizer to the hub.
 """
+import os
 
+import torch
 from unsloth import FastLanguageModel
 import argparse
 from accelerate import PartialState
@@ -46,6 +48,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    os.environ["UNSLOTH_COMPILE_DISABLE"] = "1"
+    os.environ["UNSLOTH_DISABLE_CACHE"] = "1"
+    os.environ["UNSLOTH_DISABLE_RL_PATCH"] = "1"
+
     # Training configuration
     dtype = None  # Data type (e.g., float16 or float32)
     load_in_4bit = True  # Load model in 4-bit precision
@@ -64,8 +70,9 @@ if __name__ == "__main__":
         max_seq_length=max_prompt_length,
         dtype=dtype,
         load_in_4bit=load_in_4bit,
-        device_map={"": device_string}
+        device_map={"": torch.cuda.current_device()}
     )
+
 
     def formatting_prompts_func(examples):
         """
@@ -141,6 +148,8 @@ if __name__ == "__main__":
             dataset_num_proc=2,
             packing=False,
             ddp_find_unused_parameters=False,
+            gradient_checkpointing=True,
+            gradient_checkpointing_kwargs={"use_reentrant": False},
         ),
     )
 
