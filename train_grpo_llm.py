@@ -6,10 +6,10 @@ The fine-tuned model is saved and optionally pushed to the Hugging Face model hu
 
 import argparse
 import copy
-import os
 import re
 
 import vllm
+vllm.config.CompilationConfig.cache_dir = "/hkfs/home/project/hk-project-pai00051/st_st171793"
 from unsloth import FastLanguageModel
 import chess
 from datasets import load_dataset
@@ -193,7 +193,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    vllm.config.CompilationConfig.cache_dir = "/hkfs/home/project/hk-project-pai00051/st_st171793"
 
     # Model and tokenizer configuration
     max_seq_length = 2048
