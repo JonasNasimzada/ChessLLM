@@ -8,8 +8,8 @@ import argparse
 import copy
 import re
 
-import vllm
-vllm.config.CompilationConfig.cache_dir = "/hkfs/home/project/hk-project-pai00051/st_st171793"
+# import vllm
+# vllm.CompletionOutput.cache_dir = "/hkfs/home/project/hk-project-pai00051/st_st171793"
 from unsloth import FastLanguageModel
 import chess
 from datasets import load_dataset
