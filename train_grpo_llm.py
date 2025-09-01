@@ -15,6 +15,7 @@ from trl import GRPOConfig, GRPOTrainer
 from unsloth import FastLanguageModel
 
 from utils import encoding
+from utils.calculate_stockfish_reward import evaluate_move_reward
 from utils.encoding import isolate_fen_notation, isolate_move_notation, UCI_REGEX
 
 
@@ -22,23 +23,8 @@ def stockfish_reward(prompts, completions, **kwargs):
     rewards = []
     for prompt, completion in zip(prompts, completions):
         fen = isolate_fen_notation(prompt[1]["content"])
-        chess_board = chess.Board(fen)
         move_str = isolate_move_notation(completion[0]["content"])
-        if not move_str:
-            rewards.append(-10.0)
-            continue
-        try:
-            move = chess.Move.from_uci(move_str)
-            STOCKFISH.make_moves_from_current_position([move])
-            rating = STOCKFISH.get_evaluation()['value'] / 10.0
-        except chess.InvalidMoveError:
-            rewards.append(-10.0)
-            continue
-        try:
-            chess_board.push(move)
-        except AssertionError:
-            rewards.append(-10.0)
-            continue
+        rating = evaluate_move_reward(fen, move_str, engine=STOCKFISH, bounded=True)
         rewards.append(rating)
     return rewards
 
@@ -147,10 +133,10 @@ def valid_uci_move_reward(prompts, completions, **kwargs):
             try:
                 move = chess.Move.from_uci(move_str)
             except chess.InvalidMoveError:
-                rewards.append(-5.0)
+                rewards.append(-1.0)
                 continue
             if move in chess_board.legal_moves:
-                rewards.append(1.0)
+                rewards.append(0.0)
             else:
                 rewards.append(-1.0)
         except ValueError:
@@ -179,10 +165,10 @@ def check_answer(prompts, completions, answer, **kwargs):
     scores = []
     for guess, true_answer in zip(extracted_responses, answer):
         if guess is None:
-            scores.append(-2)
+            scores.append(-1)
             continue
         if guess == true_answer:
-            scores.append(2)
+            scores.append(1)
         else:
             scores.append(-1)
     return scores
@@ -273,9 +259,9 @@ if __name__ == "__main__":
         processing_class=tokenizer,
         reward_funcs=[
             check_answer,
-            end_game_reward,
+            # end_game_reward,
             # piece_reward,
-            # valid_uci_move_reward,
+            valid_uci_move_reward,
             stockfish_reward,
         ],
         args=training_args,
