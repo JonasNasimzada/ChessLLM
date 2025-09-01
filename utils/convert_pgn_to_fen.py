@@ -58,7 +58,7 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str, amount_datapoints: i
                 writer.writerow([game_index, ply_index, uci, fen])
                 i += 1
 
-    print(f"Done! Wrote every ply’s UCI and FEN to: {csv_path}")
+    print(f"Done! Wrote every ply’s UCI and FEN to: {csv_path}, Datapoints: {i}")
 
 
 if __name__ == "__main__":
