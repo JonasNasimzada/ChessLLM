@@ -9,11 +9,11 @@ import copy
 import os
 import re
 
+from unsloth import FastLanguageModel
 import chess
 from datasets import load_dataset
 from stockfish import Stockfish
 from trl import GRPOConfig, GRPOTrainer
-from unsloth import FastLanguageModel
 
 from utils import encoding
 from utils.calculate_stockfish_reward import evaluate_move_reward
