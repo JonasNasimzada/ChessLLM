@@ -192,7 +192,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    os.environ['HF_HOME'] = "/hkfs/home/project/hk-project-pai00051/st_st171793"
+    os.environ['TORCHINDUCTOR_CACHE_DIR'] = "/hkfs/home/project/hk-project-pai00051/st_st171793"
 
     # Model and tokenizer configuration
     max_seq_length = 2048
