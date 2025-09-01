@@ -53,6 +53,7 @@ if __name__ == "__main__":
     os.environ["UNSLOTH_DISABLE_RL_PATCH"] = "1"
 
     # Training configuration
+    max_prompt_length = 2048  # Maximum sequence length
     dtype = None  # Data type (e.g., float16 or float32)
     load_in_4bit = True  # Load model in 4-bit precision
     device_string = PartialState().process_index  # Device mapping index
@@ -62,15 +63,11 @@ if __name__ == "__main__":
     # Load pre-trained model and tokenizer
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=args.model,
-        max_seq_length=2048,
+        max_seq_length=max_prompt_length,
         dtype=dtype,
         load_in_4bit=load_in_4bit,
         device_map={"": torch.cuda.current_device()}
     )
-    max_prompt_length = max(dataset.map(
-        lambda x: {"tokens": tokenizer.apply_chat_template(x["prompt"], add_generation_prompt=True, tokenize=True)},
-        batched=True, ).map(lambda x: {"length": len(x["tokens"])})["length"]) + 1
-    print(f"Max prompt length: {max_prompt_length}")
 
 
     def formatting_prompts_func(examples):
