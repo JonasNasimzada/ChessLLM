@@ -8,13 +8,12 @@ import argparse
 import copy
 import re
 
-# import vllm
-# vllm.CompletionOutput.cache_dir = "/hkfs/home/project/hk-project-pai00051/st_st171793"
 from unsloth import FastLanguageModel
 import chess
 from datasets import load_dataset
 from stockfish import Stockfish
 from trl import GRPOConfig, GRPOTrainer
+from vllm.config import CompilationConfig
 
 from utils import encoding
 from utils.calculate_stockfish_reward import evaluate_move_reward
@@ -193,10 +192,16 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-
     # Model and tokenizer configuration
     max_seq_length = 2048
     lora_rank = 64
+
+    comp_cfg = CompilationConfig(
+        # pick a project path with plenty of space
+        cache_dir="/hkfs/home/project/hk-project-pai00051/st_st171793/vllm_compile_cache",
+        level=3,
+        backend="inductor"
+    )
 
     # Load pre-trained model and tokenizer
     model, tokenizer = FastLanguageModel.from_pretrained(
@@ -207,6 +212,7 @@ if __name__ == "__main__":
         max_lora_rank=lora_rank,
         gpu_memory_utilization=0.6,
         device_map='auto',
+        compilation_config=comp_cfg,
 
     )
 
