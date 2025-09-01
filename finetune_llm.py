@@ -59,19 +59,18 @@ if __name__ == "__main__":
 
     dataset = load_dataset("json", data_files=args.dataset, split="train")
 
-    max_prompt_length = max(dataset.map(
-        lambda x: {"tokens": tokenizer.apply_chat_template(x["prompt"], add_generation_prompt=True, tokenize=True)},
-        batched=True, ).map(lambda x: {"length": len(x["tokens"])})["length"]) + 1
-    print(f"Max prompt length: {max_prompt_length}")
-
     # Load pre-trained model and tokenizer
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=args.model,
-        max_seq_length=max_prompt_length,
+        max_seq_length=2048,
         dtype=dtype,
         load_in_4bit=load_in_4bit,
         device_map={"": torch.cuda.current_device()}
     )
+    max_prompt_length = max(dataset.map(
+        lambda x: {"tokens": tokenizer.apply_chat_template(x["prompt"], add_generation_prompt=True, tokenize=True)},
+        batched=True, ).map(lambda x: {"length": len(x["tokens"])})["length"]) + 1
+    print(f"Max prompt length: {max_prompt_length}")
 
 
     def formatting_prompts_func(examples):
