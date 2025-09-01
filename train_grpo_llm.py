@@ -9,6 +9,7 @@ import copy
 import os
 import re
 
+import vllm
 from unsloth import FastLanguageModel
 import chess
 from datasets import load_dataset
@@ -192,7 +193,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    os.environ['TORCHINDUCTOR_CACHE_DIR'] = "/hkfs/home/project/hk-project-pai00051/st_st171793"
+    vllm.config.CompilationConfig.cache_dir = "/hkfs/home/project/hk-project-pai00051/st_st171793"
 
     # Model and tokenizer configuration
     max_seq_length = 2048
