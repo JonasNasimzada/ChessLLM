@@ -58,8 +58,6 @@ if __name__ == "__main__":
     load_in_4bit = True  # Load model in 4-bit precision
     device_string = PartialState().process_index  # Device mapping index
 
-    dataset = load_dataset("json", data_files=args.dataset, split="train")
-
     # Load pre-trained model and tokenizer
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=args.model,
@@ -68,6 +66,26 @@ if __name__ == "__main__":
         load_in_4bit=load_in_4bit,
         device_map={"": torch.cuda.current_device()}
     )
+
+    # Apply PEFT (LoRA) to model for parameter-efficient fine-tuning
+    model = FastLanguageModel.get_peft_model(
+        model,
+        r=16,
+        target_modules=[
+            "q_proj", "k_proj", "v_proj", "o_proj",
+            "gate_proj", "up_proj", "down_proj"
+        ],
+        lora_alpha=16,
+        lora_dropout=0,
+        bias="none",
+        use_gradient_checkpointing="unsloth",
+        random_state=3407,
+        use_rslora=False,
+        loftq_config=None,
+    )
+
+    # Wrap tokenizer with chat template for prompt formatting
+    tokenizer = get_chat_template(tokenizer, chat_template="llama-3.1")
 
 
     def formatting_prompts_func(examples):
@@ -93,32 +111,12 @@ if __name__ == "__main__":
 
 
     # Load dataset and apply formatting function
-
+    dataset = load_dataset("json", data_files=args.dataset, split="train")
     dataset = dataset.map(formatting_prompts_func, batched=True)
 
     # Display sample for verification
     print(dataset[5]["messages"])
     print(dataset[5]["text"])
-
-    # Apply PEFT (LoRA) to model for parameter-efficient fine-tuning
-    model = FastLanguageModel.get_peft_model(
-        model,
-        r=16,
-        target_modules=[
-            "q_proj", "k_proj", "v_proj", "o_proj",
-            "gate_proj", "up_proj", "down_proj"
-        ],
-        lora_alpha=16,
-        lora_dropout=0,
-        bias="none",
-        use_gradient_checkpointing="unsloth",
-        random_state=3407,
-        use_rslora=False,
-        loftq_config=None,
-    )
-
-    # Wrap tokenizer with chat template for prompt formatting
-    tokenizer = get_chat_template(tokenizer, chat_template="llama-3.1")
 
     # Initialize SFT trainer with training arguments
     trainer = SFTTrainer(
