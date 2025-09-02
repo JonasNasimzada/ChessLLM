@@ -259,7 +259,8 @@ if __name__ == "__main__":
         output_dir=args.output,
         num_completions_to_print=1,
         log_completions=True,
-        wandb_log_unique_prompts=True
+        wandb_log_unique_prompts=True,
+        use_vllm=False
     )
 
     # Initialize the GRPO trainer
