@@ -37,6 +37,12 @@ if __name__ == "__main__":
         default="train_dataset.json",
         help="Path to save the processed dataset in JSON format."
     )
+    parser.add_argument(
+        "--past_moves",
+        type=int,
+        default=15,
+        help="Number of past moves (FENs) to include in the context."
+    )
 
     args = parser.parse_args()
 
@@ -97,7 +103,7 @@ if __name__ == "__main__":
         if len(prev_fens) == 0:
             contexts.append("no moves before")
         else:
-            start = max(0, len(prev_fens) - 15)
+            start = max(0, len(prev_fens) - args.past_moves)
             contexts.append("\n".join("{}. {}".format(n, i) for n, i in enumerate(prev_fens[start:], start=1)))
 
         # Record the current move into the history
