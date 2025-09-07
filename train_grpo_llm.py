@@ -169,7 +169,7 @@ def check_answer(prompts, completions, answer, **kwargs):
             scores.append(-1)
             continue
         if guess == true_answer:
-            scores.append(1)
+            scores.append(0)
         else:
             scores.append(-1)
     return scores
