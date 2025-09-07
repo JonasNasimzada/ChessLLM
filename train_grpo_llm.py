@@ -268,7 +268,7 @@ if __name__ == "__main__":
         model=model,
         processing_class=tokenizer,
         reward_funcs=[
-            check_answer,
+            # check_answer,
             # end_game_reward,
             # piece_reward,
             valid_uci_move_reward,
