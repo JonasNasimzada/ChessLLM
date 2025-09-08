@@ -139,7 +139,7 @@ if __name__ == "__main__":
             report_to="wandb",
             dataset_text_field="text",
             max_seq_length=max_prompt_length,
-            dataset_num_proc=2,
+            #dataset_num_proc=2,
             packing=False,
             ddp_find_unused_parameters=False,
             gradient_checkpointing=True,
