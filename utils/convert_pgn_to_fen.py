@@ -45,6 +45,11 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str, amount_datapoints: i
 
             ply_index = 0
             for move in game.mainline_moves():
+                i += 1
+                if (i-1) < args.start:
+                    board.push(move)
+                    continue
+
                 ply_index += 1
                 fen = board.fen()
 
@@ -56,7 +61,6 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str, amount_datapoints: i
 
                 # Write one line per half-move
                 writer.writerow([game_index, ply_index, uci, fen])
-                i += 1
 
     print(f"Done! Wrote every ply’s UCI and FEN to: {csv_path}, Datapoints: {i}")
 
@@ -86,6 +90,13 @@ if __name__ == "__main__":
         default=1_000_000,
         required=False,
         help="Maximum number of FENs to extract from the PGN file."
+    )
+    parser.add_argument(
+        "--start",
+        type=int,
+        default=0,
+        required=False,
+        help="Starting index for extraction"
     )
 
     args = parser.parse_args()
