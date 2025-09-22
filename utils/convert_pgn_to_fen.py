@@ -45,10 +45,11 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str, amount_datapoints: i
 
             ply_index = 0
             for move in game.mainline_moves():
-                i += 1
-                if (i-1) < args.start:
+
+                if i < args.start:
                     board.push(move)
                     continue
+                i += 1
 
                 ply_index += 1
                 fen = board.fen()
