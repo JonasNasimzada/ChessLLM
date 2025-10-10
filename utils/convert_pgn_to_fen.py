@@ -10,7 +10,15 @@ import chess
 import chess.pgn
 
 
-def extract_all_fens_from_pgn(pgn_path: str, csv_path: str, amount_datapoints: int = 1_000_000) -> None:
+def count_pieces(board):
+    piece_count = 0
+    for pieces in chess.PIECE_TYPES:
+        for color in chess.COLORS:
+            piece_count += len(board.pieces(pieces, color))
+    return piece_count
+
+
+def extract_all_fens_from_pgn(pgn_path: str, amount_datapoints: int = 1_000_000):
     """
     Extracts FEN strings and corresponding move data from a PGN file and writes them to a CSV file.
 
@@ -26,16 +34,22 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str, amount_datapoints: i
         - move: The move in UCI format.
         - fen: The FEN string after the move.
     """
-    with open(pgn_path, encoding="utf-8") as pgn_file, \
-            open(csv_path, "w", newline="", encoding="utf-8") as out_csv:
+    endgame = []
+    tactic = []
+    midgame = []
+    opening_game = []
 
-        writer = csv.writer(out_csv)
-        # Header: Game # (1-based), Ply # (1-based), Move (UCI), FEN
-        writer.writerow(["game_index", "ply_index", "move", "fen"])
+    fullgames = []
 
+    game_parts = [endgame, tactic, midgame, opening_game]
+    filenames = [f"{args.output}_endgame.csv", f"{args.output}_tactic.csv", f"{args.output}_midgame.csv",
+                 f"{args.output}_opening_game.csv"]
+    fullgames_filename = f"{args.output}.csv"
+
+    with open(pgn_path, encoding="utf-8") as pgn_file:
         game_index = 0
         i = 0
-        while i < amount_datapoints:
+        while i < amount_datapoints or (args.split and len(endgame) < args.size_endgame):
             game = chess.pgn.read_game(pgn_file)
             if game is None:
                 break
@@ -56,14 +70,36 @@ def extract_all_fens_from_pgn(pgn_path: str, csv_path: str, amount_datapoints: i
 
                 # Get the UCI for this move before pushing
                 uci = board.uci(move)
-
                 # Push the move onto the board
                 board.push(move)
+                if args.split:
+                    if count_pieces(board) <= 5:
+                        endgame.append((game_index, ply_index, uci, fen))
+                    elif count_pieces(board) <= 10:
+                        tactic.append((game_index, ply_index, uci, fen))
+                    elif count_pieces(board) <= 20:
+                        midgame.append((game_index, ply_index, uci, fen))
+                    else:
+                        opening_game.append((game_index, ply_index, uci, fen))
 
-                # Write one line per half-move
-                writer.writerow([game_index, ply_index, uci, fen])
+                fullgames.append((game_index, ply_index, uci, fen))
 
-    print(f"Done! Wrote every ply’s UCI and FEN to: {csv_path}, Datapoints: {i}")
+                if i % 100000 == 0:
+                    print(f"Extracted {i} FENs so far...")
+
+    if args.split:
+        for i in range(len(game_parts)):
+            with open(filenames[i], mode='a', newline="", encoding='utf-8') as csv_file:
+                writer = csv.writer(csv_file)
+                writer.writerow(['game_index', 'ply_index', 'move', 'fen'])
+                writer.writerows(game_parts[i])
+            print(f"Done! Wrote every ply’s UCI and FEN to: {filenames[i]}, Datapoints: {len(game_parts[i])}")
+    with open(fullgames_filename, mode='w', newline="", encoding='utf-8') as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(['game_index', 'ply_index', 'move', 'fen'])
+        writer.writerows(fullgames)
+        print(f"Done! Wrote every ply’s UCI and FEN to: {fullgames_filename}, Datapoints: {len(fullgames)}")
+
 
 
 if __name__ == "__main__":
@@ -81,7 +117,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output",
         type=str,
-        default="LumbrasGigaBase_OTB_2025.csv",
+        default="LumbrasGigaBase_OTB_2025",
         required=False,
         help="Path to the output CSV file where FENs will be saved."
     )
@@ -99,6 +135,20 @@ if __name__ == "__main__":
         required=False,
         help="Starting index for extraction"
     )
+    parser.add_argument(
+        "--split",
+        type=bool,
+        default=True,
+        required=False,
+        help="Split into csv depending on game phase (endgame, midgame, opening, tactic, fullgames)."
+    )
+    parser.add_argument(
+        "--size_endgame",
+        type=int,
+        default=1_000_000,
+        required=False,
+        help="Maximum number of FENs to extract from the PGN file to endgame."
+    )
 
     args = parser.parse_args()
-    extract_all_fens_from_pgn(args.data, args.output, args.size)
+    extract_all_fens_from_pgn(args.data, args.size)
